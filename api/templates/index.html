@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Polygon Service</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+
+    header { border-bottom: 1px solid #21262d; padding-bottom: 1rem; margin-bottom: 2rem; }
+    h1 { font-size: 1.8rem; color: #58a6ff; }
+    h2 { color: #58a6ff; font-size: 1.1rem; margin: 2rem 0 .8rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    thead tr { background: #161b22; }
+    th { text-align: left; padding: .6rem 1rem; color: #8b949e; font-weight: 600;
+         font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+    td { padding: .55rem 1rem; border-bottom: 1px solid #21262d; }
+    tbody tr:hover { background: #161b22; }
+
+    .method {
+      display: inline-block; padding: .15rem .5rem;
+      border-radius: 4px; font-size: .78rem; font-weight: 700; font-family: monospace;
+    }
+    .GET    { background: #1f6feb33; color: #79c0ff; border: 1px solid #1f6feb; }
+    .POST   { background: #3fb95033; color: #56d364; border: 1px solid #3fb950; }
+    .PUT    { background: #d2992233; color: #e3b341; border: 1px solid #d29922; }
+    .DELETE { background: #f8514933; color: #ff7b72; border: 1px solid #f85149; }
+
+    .url { font-family: monospace; color: #c9d1d9; }
+    .url a { color: #58a6ff; text-decoration: none; }
+    .url a:hover { text-decoration: underline; }
+    .desc { color: #8b949e; font-size: .88rem; }
+
+    .playground { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: .5rem; }
+    @media (max-width: 900px) { .playground { grid-template-columns: 1fr; } }
+
+    .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.2rem; }
+    .card h3 {
+      font-size: .82rem; color: #8b949e; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+
+    label { display: block; font-size: .82rem; color: #8b949e; margin-bottom: .3rem; margin-top: .7rem; }
+    label:first-of-type { margin-top: 0; }
+
+    input, textarea, select {
+      width: 100%; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 5px; color: #c9d1d9; font-size: .85rem;
+      padding: .45rem .7rem; font-family: 'Cascadia Code', 'Fira Code', monospace;
+      outline: none; transition: border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #58a6ff; }
+    textarea { resize: vertical; }
+    .hint { font-size: .75rem; color: #484f58; margin-top: .25rem; }
+
+    .row { display: flex; gap: .5rem; }
+    .row input { flex: 1; }
+
+    button {
+      margin-top: .9rem; width: 100%; padding: .5rem;
+      background: #1f6feb; color: #fff; border: none;
+      border-radius: 5px; font-size: .88rem; font-weight: 600;
+      cursor: pointer; transition: background .15s;
+    }
+    button:hover  { background: #388bfd; }
+    button.danger { background: #b91c1c; }
+    button.danger:hover { background: #dc2626; }
+    button.warn   { background: #92400e; }
+    button.warn:hover   { background: #b45309; }
+    button.mt-sm  { margin-top: .4rem; }
+
+    .preview-wrap {
+      margin-top: .8rem; background: #0d1117;
+      border: 1px solid #30363d; border-radius: 6px;
+      overflow: hidden; position: relative;
+    }
+    .preview-label { position: absolute; top: .4rem; left: .6rem; font-size: .7rem; color: #484f58; pointer-events: none; }
+    canvas { display: block; width: 100%; height: 180px; }
+
+    .id-banner {
+      margin-top: .8rem; background: #0d1117;
+      border: 1px solid #3fb950; border-radius: 6px;
+      padding: .6rem .9rem; display: none;
+      align-items: center; gap: .6rem;
+    }
+    .id-banner.show { display: flex; }
+    .id-banner-label { font-size: .75rem; color: #3fb950; white-space: nowrap; }
+    .id-banner-value {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: .78rem; color: #c9d1d9;
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .id-copy {
+      font-size: .72rem; color: #58a6ff; cursor: pointer;
+      white-space: nowrap; border: none; background: none;
+      padding: 0; margin: 0; width: auto; font-weight: 600;
+    }
+    .id-copy:hover { color: #79c0ff; }
+
+    .pip-result {
+      margin-top: .8rem; border-radius: 6px;
+      padding: .7rem 1rem; display: none;
+      align-items: flex-start; gap: .8rem;
+    }
+    .pip-result.show { display: flex; }
+    .pip-result.hit  { background: #1a2e1a; border: 1px solid #3fb950; }
+    .pip-result.miss { background: #2e1a1a; border: 1px solid #f85149; }
+    .pip-icon { display: none; }
+    .pip-text { flex: 1; }
+    .pip-text b { display: block; font-size: .9rem; }
+    .pip-result.hit  .pip-text b { color: #3fb950; }
+    .pip-result.miss .pip-text b { color: #f85149; }
+    .pip-names { font-size: .78rem; color: #8b949e; margin-top: .2rem; font-family: monospace; white-space: pre; }
+
+    /* кнопка показать JSON */
+    .json-toggle {
+      margin-top: .5rem; width: 100%; padding: .35rem;
+      background: transparent; color: #484f58;
+      border: 1px solid #30363d; border-radius: 5px;
+      font-size: .78rem; font-weight: 500; cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .json-toggle:hover { color: #6e7681; border-color: #3d444d; background: #161b22; }
+
+    /* JSON блок */
+    .response {
+      margin-top: .5rem; background: #0d1117; border: 1px solid #21262d;
+      border-radius: 5px; padding: .7rem .9rem;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: .78rem; white-space: pre-wrap; word-break: break-all;
+      max-height: 220px; overflow-y: auto; color: #e6edf3; display: none;
+    }
+    .response.ok    { border-color: #3fb950; }
+    .response.error { border-color: #f85149; color: #ff7b72; }
+    .response.show  { display: block; }
+
+    footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #21262d; font-size: .82rem; color: #484f58; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Polygon Service</h1>
+</header>
+
+<h2>API эндпоинты</h2>
+<table>
+  <thead><tr><th>Метод</th><th>URL</th><th>Описание</th></tr></thead>
+  <tbody>
+    <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/health">/health</a></td><td class="desc">Статус сервиса</td></tr>
+    <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/stats">/stats</a></td><td class="desc">Статистика пространственного индекса</td></tr>
+    <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/polygons">/polygons</a></td><td class="desc">Список всех полигонов</td></tr>
+    <tr><td><span class="method POST">POST</span></td><td class="url">/polygons</td><td class="desc">Создать полигон</td></tr>
+    <tr><td><span class="method GET">GET</span></td><td class="url">/polygons/{id}</td><td class="desc">Получить полигон по ID</td></tr>
+    <tr><td><span class="method PUT">PUT</span></td><td class="url">/polygons/{id}</td><td class="desc">Обновить полигон</td></tr>
+    <tr><td><span class="method DELETE">DELETE</span></td><td class="url">/polygons/{id}</td><td class="desc">Удалить полигон</td></tr>
+    <tr><td><span class="method POST">POST</span></td><td class="url">/query/point-in-polygon</td><td class="desc">Найти полигоны, содержащие точку</td></tr>
+  </tbody>
+</table>
+
+<h2>Playground</h2>
+<div class="playground">
+
+  <!-- Создать полигон -->
+  <div class="card">
+    <h3><span class="method POST">POST</span> Создать полигон</h3>
+
+    <label>Название</label>
+    <input id="create-name" type="text" placeholder="например: полигон1">
+
+    <label>Вершины полигона</label>
+    <textarea id="create-pts" rows="4"
+      placeholder="Каждая точка на новой строке:&#10;0,0&#10;10,0&#10;10,10&#10;0,10"
+      oninput="drawPreview()">0,0
+10,0
+10,10
+0,10</textarea>
+    <div class="hint">Формат: x,y на каждой строке. Минимум 3 точки.</div>
+
+    <div class="preview-wrap">
+      <span class="preview-label">превью</span>
+      <canvas id="preview-canvas"></canvas>
+    </div>
+
+    <label>Properties (JSON, опционально)</label>
+    <input id="create-props" type="text" placeholder='{"region": "Moscow"}'>
+
+    <button onclick="createPolygon()">Создать</button>
+
+    <div class="id-banner" id="create-id-banner">
+      <span class="id-banner-label">ID →</span>
+      <span class="id-banner-value" id="create-id-value"></span>
+      <button class="id-copy" onclick="copyId()">копировать</button>
+    </div>
+
+    <button class="json-toggle" id="create-json-btn" onclick="toggleJson('create-resp', 'create-json-btn')" style="display:none">
+      показать JSON ▾
+    </button>
+    <div class="response" id="create-resp"></div>
+  </div>
+
+  <!-- Точка в полигоне -->
+  <div class="card">
+    <h3><span class="method POST">POST</span> Точка в полигоне</h3>
+
+    <label>Координаты точки</label>
+    <div class="row">
+      <input id="pip-x" type="number" placeholder="x" value="5">
+      <input id="pip-y" type="number" placeholder="y" value="5">
+    </div>
+
+    <label>Алгоритм</label>
+    <select id="pip-algo">
+      <option value="ray_casting">ray_casting</option>
+      <option value="winding_number">winding_number</option>
+    </select>
+
+    <label style="display:flex; align-items:center; gap:.5rem; margin-top:.7rem; cursor:pointer;">
+      <input id="pip-boundary" type="checkbox" checked style="width:auto">
+      Считать точку на границе попаданием
+    </label>
+
+    <button onclick="checkPoint()">Проверить</button>
+
+    <div class="pip-result" id="pip-result">
+      <div class="pip-icon" id="pip-icon"></div>
+      <div class="pip-text">
+        <b id="pip-verdict"></b>
+        <div class="pip-names" id="pip-names"></div>
+      </div>
+    </div>
+
+    <button class="json-toggle" id="pip-json-btn" onclick="toggleJson('pip-resp', 'pip-json-btn')" style="display:none">
+      показать JSON ▾
+    </button>
+    <div class="response" id="pip-resp"></div>
+  </div>
+
+  <!-- Получить / удалить -->
+  <div class="card">
+    <h3>Получить или удалить полигон</h3>
+
+    <label>ID полигона</label>
+    <input id="byid-id" type="text" placeholder="вставь id из баннера выше">
+
+    <button onclick="getPolygon()">Получить (GET)</button>
+    <button class="danger mt-sm" onclick="deletePolygon()">Удалить (DELETE)</button>
+    <div class="response" id="byid-resp"></div>
+  </div>
+
+  <!-- Обновить -->
+  <div class="card">
+    <h3><span class="method PUT">PUT</span> Обновить полигон</h3>
+
+    <label>ID полигона</label>
+    <input id="upd-id" type="text" placeholder="вставь id из баннера выше">
+
+    <label>Новое название (опционально)</label>
+    <input id="upd-name" type="text" placeholder="оставь пустым, чтобы не менять">
+
+    <label>Новые вершины (опционально)</label>
+    <textarea id="upd-pts" rows="3" placeholder="оставь пустым, чтобы не менять геометрию"></textarea>
+    <div class="hint">Формат: x,y на каждой строке.</div>
+
+    <button class="warn" onclick="updatePolygon()">Обновить</button>
+    <div class="response" id="upd-resp"></div>
+  </div>
+
+</div>
+
+<script>
+  function parsePoints(text) {
+    const pts = text.trim().split('\n')
+      .map(l => l.trim()).filter(Boolean)
+      .map(l => {
+        const [x, y] = l.split(',').map(Number);
+        if (isNaN(x) || isNaN(y)) throw new Error(`Неверная точка: "${l}"`);
+        return [x, y];
+      });
+    if (pts.length < 3) throw new Error('Нужно минимум 3 точки');
+    return pts;
+  }
+
+  function toGeoJsonCoords(pts) {
+    return [[...pts, pts[0]]];
+  }
+
+  // превью
+  function drawPreview() {
+    const canvas = document.getElementById('preview-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.offsetWidth || 300, H = canvas.offsetHeight || 180;
+    canvas.width = W; canvas.height = H;
+    ctx.clearRect(0, 0, W, H);
+
+    let pts;
+    try { pts = parsePoints(document.getElementById('create-pts').value); }
+    catch {
+      ctx.fillStyle = '#484f58'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText('введи точки чтобы увидеть фигуру', W/2, H/2);
+      return;
+    }
+
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 28;
+    const scale = Math.min(
+      maxX === minX ? 1 : (W - pad*2) / (maxX - minX),
+      maxY === minY ? 1 : (H - pad*2) / (maxY - minY)
+    );
+    const offX = pad + ((W - pad*2) - (maxX - minX) * scale) / 2;
+    const offY = pad + ((H - pad*2) - (maxY - minY) * scale) / 2;
+    const tx = x => offX + (x - minX) * scale;
+    const ty = y => offY + (maxY - y) * scale;
+
+    ctx.beginPath();
+    ctx.moveTo(tx(pts[0][0]), ty(pts[0][1]));
+    pts.slice(1).forEach(([x,y]) => ctx.lineTo(tx(x), ty(y)));
+    ctx.closePath();
+    ctx.fillStyle = '#1f6feb22'; ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 1.5;
+    ctx.fill(); ctx.stroke();
+
+    pts.forEach(([x, y]) => {
+      const cx = tx(x), cy = ty(y);
+      ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI*2);
+      ctx.fillStyle = '#58a6ff'; ctx.fill();
+      ctx.fillStyle = '#8b949e'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${x},${y}`, cx, cy - 8);
+    });
+  }
+
+  window.addEventListener('load', drawPreview);
+  window.addEventListener('resize', drawPreview);
+
+  // утилиты
+  async function req(method, url, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    return { ok: r.ok, data: await r.json() };
+  }
+
+  function showResp(id, data, ok) {
+    const el = document.getElementById(id);
+    el.textContent = JSON.stringify(data, null, 2);
+    el.className = 'response show ' + (ok ? 'ok' : 'error');
+  }
+
+  function toggleJson(respId, btnId) {
+    const el  = document.getElementById(respId);
+    const btn = document.getElementById(btnId);
+    const visible = el.classList.contains('show');
+    el.classList.toggle('show', !visible);
+    btn.textContent = visible ? 'показать JSON ▾' : 'скрыть JSON ▴';
+  }
+
+  function copyId() {
+    const val = document.getElementById('create-id-value').textContent;
+    navigator.clipboard.writeText(val).catch(() => {});
+    const btn = document.querySelector('.id-copy');
+    btn.textContent = 'скопировано!';
+    setTimeout(() => { btn.textContent = 'копировать'; }, 1500);
+  }
+
+  // создать полигон
+  async function createPolygon() {
+    const name  = document.getElementById('create-name').value.trim();
+    const props = document.getElementById('create-props').value.trim();
+    if (!name) {
+      document.getElementById('create-id-banner').className = 'id-banner';
+      document.getElementById('create-json-btn').style.display = 'none';
+      return showResp('create-resp', { error: 'Введите название' }, false);
+    }
+
+    let pts, properties = {};
+    try { pts = parsePoints(document.getElementById('create-pts').value); }
+    catch (e) { return showResp('create-resp', { error: e.message }, false); }
+    if (props) {
+      try { properties = JSON.parse(props); }
+      catch { return showResp('create-resp', { error: 'Ошибка парсинга properties' }, false); }
+    }
+
+    const { ok, data } = await req('POST', '/polygons', {
+      name, geometry: { type: 'Polygon', coordinates: toGeoJsonCoords(pts) }, properties
+    });
+
+    // сохраняем JSON в блоке (скрытый)
+    const respEl = document.getElementById('create-resp');
+    respEl.textContent = JSON.stringify(data, null, 2);
+    respEl.className = 'response ' + (ok ? 'ok' : 'error'); // не show
+
+    if (ok && data.id) {
+      document.getElementById('create-id-value').textContent = data.id;
+      document.getElementById('create-id-banner').className = 'id-banner show';
+    } else {
+      document.getElementById('create-id-banner').className = 'id-banner';
+    }
+
+    const btn = document.getElementById('create-json-btn');
+    btn.style.display = 'block';
+    btn.textContent = 'показать JSON ▾';
+  }
+
+  // проверить точку
+  async function checkPoint() {
+    const x    = parseFloat(document.getElementById('pip-x').value);
+    const y    = parseFloat(document.getElementById('pip-y').value);
+    const algo = document.getElementById('pip-algo').value;
+    const inc  = document.getElementById('pip-boundary').checked;
+
+    if (isNaN(x) || isNaN(y)) return;
+
+    const { ok, data } = await req('POST', '/query/point-in-polygon',
+      { point: [x, y], algorithm: algo, include_boundary: inc });
+
+    // сохраняем JSON скрытым
+    const respEl = document.getElementById('pip-resp');
+    respEl.textContent = JSON.stringify(data, null, 2);
+    respEl.className = 'response ' + (ok ? 'ok' : 'error');
+
+    const btn = document.getElementById('pip-json-btn');
+    btn.style.display = 'block';
+    btn.textContent = 'показать JSON ▾';
+
+    // красивый результат
+    const resultEl  = document.getElementById('pip-result');
+    const iconEl    = document.getElementById('pip-icon');
+    const verdictEl = document.getElementById('pip-verdict');
+    const namesEl   = document.getElementById('pip-names');
+
+    if (!ok) {
+      resultEl.className = 'pip-result show miss';
+      iconEl.textContent = '✗';
+      verdictEl.textContent = data.error || 'Ошибка запроса';
+      namesEl.textContent = '';
+      return;
+    }
+
+    const hit = data.matching_count > 0;
+    resultEl.className = `pip-result show ${hit ? 'hit' : 'miss'}`;
+    iconEl.textContent = hit ? '✓' : '✗';
+    verdictEl.textContent = hit
+      ? `Точка (${x}, ${y}) попала в ${data.matching_count} полигон${data.matching_count > 1 ? 'а' : ''}`
+      : `Точка (${x}, ${y}) не попала ни в один полигон`;
+    namesEl.textContent = hit
+      ? data.matching_polygons.map(p => `· ${p.name}  [${p.id.slice(0,8)}...]`).join('\n')
+      : '';
+  }
+
+  // получить удалить
+  async function getPolygon() {
+    const id = document.getElementById('byid-id').value.trim();
+    if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
+    const { ok, data } = await req('GET', `/polygons/${id}`);
+    showResp('byid-resp', data, ok);
+  }
+
+  async function deletePolygon() {
+    const id = document.getElementById('byid-id').value.trim();
+    if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
+    const { ok, data } = await req('DELETE', `/polygons/${id}`);
+    showResp('byid-resp', data, ok);
+  }
+
+  // обновить
+  async function updatePolygon() {
+    const id   = document.getElementById('upd-id').value.trim();
+    const name = document.getElementById('upd-name').value.trim();
+    const raw  = document.getElementById('upd-pts').value.trim();
+    if (!id) return showResp('upd-resp', { error: 'Введите ID' }, false);
+
+    const body = {};
+    if (name) body.name = name;
+    if (raw) {
+      try { body.geometry = { type: 'Polygon', coordinates: toGeoJsonCoords(parsePoints(raw)) }; }
+      catch (e) { return showResp('upd-resp', { error: e.message }, false); }
+    }
+    if (!Object.keys(body).length) return showResp('upd-resp', { error: 'Нечего обновлять' }, false);
+    const { ok, data } = await req('PUT', `/polygons/${id}`, body);
+    showResp('upd-resp', data, ok);
+  }
+</script>
+
+</body>
+</html>
