@@ -86,7 +86,7 @@ def winding_number(point: Point, ring: Ring) -> PointLocation:
     return PointLocation.INSIDE if wn != 0 else PointLocation.OUTSIDE
 
 
-# Точка в полигоне с отверстиями
+# Точка в полигоне с отверстиями(парками например)
 
 def polygon_contains(
     point: Point,
