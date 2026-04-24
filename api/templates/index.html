@@ -32,6 +32,7 @@
     .desc { color: #8b949e; font-size: .88rem; }
 
     .playground { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: .5rem; }
+    .card-wide { grid-column: 1 / -1; }
     @media (max-width: 900px) { .playground { grid-template-columns: 1fr; } }
 
     .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.2rem; }
@@ -63,63 +64,50 @@
     button.warn   { background: #92400e; }
     button.warn:hover   { background: #b45309; }
     button.mt-sm  { margin-top: .4rem; }
-    button.ghost  {
-      background: transparent; color: #484f58;
-      border: 1px solid #30363d; font-size: .78rem; font-weight: 500;
-    }
+    button.ghost  { background: transparent; color: #484f58; border: 1px solid #30363d; font-size: .78rem; font-weight: 500; }
     button.ghost:hover { color: #6e7681; border-color: #3d444d; background: #161b22; }
 
-    /* ── Canvas-редактор полигона ── */
+    /* canvas */
+    .canvas-outer { margin-top: .8rem; display: flex; gap: 0; }
+    .y-axis {
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 4px 4px 4px 0; width: 36px; flex-shrink: 0;
+      font-size: .78rem; color: #6e7681; font-family: monospace; text-align: right;
+    }
+    .canvas-inner { flex: 1; display: flex; flex-direction: column; }
     .canvas-wrap {
-      margin-top: .8rem;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      overflow: hidden;
-      position: relative;
-      cursor: crosshair;
+      background: #0d1117; border: 1px solid #30363d;
+      border-radius: 6px; overflow: hidden; position: relative; cursor: crosshair;
     }
-    .canvas-wrap canvas { display: block; width: 100%; height: 260px; }
+    .canvas-wrap canvas { display: block; width: 100%; height: 380px; }
     .canvas-hint {
-      position: absolute; bottom: .5rem; left: 50%; transform: translateX(-50%);
-      font-size: .7rem; color: #484f58; pointer-events: none; white-space: nowrap;
+      position: absolute; bottom: .4rem; left: 50%; transform: translateX(-50%);
+      font-size: .68rem; color: #484f58; pointer-events: none; white-space: nowrap;
     }
-    .canvas-coords {
-      margin-top: .5rem;
-      background: #0d1117; border: 1px solid #21262d;
-      border-radius: 5px; padding: .5rem .7rem;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      font-size: .75rem; color: #8b949e;
-      max-height: 80px; overflow-y: auto;
-      min-height: 28px;
+    .x-axis {
+      display: flex; justify-content: space-between;
+      padding: 2px 0 0 0;
+      font-size: .78rem; color: #6e7681; font-family: monospace;
     }
+    .x-label { text-align: center; }
+
     .canvas-btns { display: flex; gap: .5rem; margin-top: .5rem; }
     .canvas-btns button { margin-top: 0; flex: 1; padding: .35rem; font-size: .78rem; }
 
-    /* ── ID-баннер ── */
     .id-banner {
       margin-top: .8rem; background: #0d1117;
       border: 1px solid #3fb950; border-radius: 6px;
-      padding: .6rem .9rem; display: none;
-      align-items: center; gap: .6rem;
+      padding: .6rem .9rem; display: none; align-items: center; gap: .6rem;
     }
     .id-banner.show { display: flex; }
     .id-banner-label { font-size: .75rem; color: #3fb950; white-space: nowrap; }
-    .id-banner-value {
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      font-size: .78rem; color: #c9d1d9;
-      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .id-copy { font-size: .72rem; color: #58a6ff; cursor: pointer;
-               white-space: nowrap; border: none; background: none;
-               padding: 0; margin: 0; width: auto; font-weight: 600; }
+    .id-banner-value { font-family: 'Cascadia Code','Fira Code',monospace; font-size: .78rem; color: #c9d1d9;
+                       flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .id-copy { font-size: .72rem; color: #58a6ff; cursor: pointer; white-space: nowrap;
+               border: none; background: none; padding: 0; margin: 0; width: auto; font-weight: 600; }
     .id-copy:hover { color: #79c0ff; }
 
-    /* ── PIP результат ── */
-    .pip-result {
-      margin-top: .8rem; border-radius: 6px;
-      padding: .7rem 1rem; display: none; align-items: flex-start; gap: .8rem;
-    }
+    .pip-result { margin-top: .8rem; border-radius: 6px; padding: .7rem 1rem; display: none; align-items: flex-start; gap: .8rem; }
     .pip-result.show { display: flex; }
     .pip-result.hit  { background: #1a2e1a; border: 1px solid #3fb950; }
     .pip-result.miss { background: #2e1a1a; border: 1px solid #f85149; }
@@ -129,19 +117,17 @@
     .pip-result.miss .pip-text b { color: #f85149; }
     .pip-names { font-size: .78rem; color: #8b949e; margin-top: .2rem; font-family: monospace; white-space: pre; }
 
-    /* ── JSON блок ── */
     .json-toggle {
       margin-top: .5rem; width: 100%; padding: .35rem;
-      background: transparent; color: #484f58;
-      border: 1px solid #30363d; border-radius: 5px;
-      font-size: .78rem; font-weight: 500; cursor: pointer;
+      background: transparent; color: #484f58; border: 1px solid #30363d;
+      border-radius: 5px; font-size: .78rem; font-weight: 500; cursor: pointer;
       transition: color .15s, border-color .15s;
     }
     .json-toggle:hover { color: #6e7681; border-color: #3d444d; background: #161b22; }
     .response {
       margin-top: .5rem; background: #0d1117; border: 1px solid #21262d;
       border-radius: 5px; padding: .7rem .9rem;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-family: 'Cascadia Code','Fira Code',monospace;
       font-size: .78rem; white-space: pre-wrap; word-break: break-all;
       max-height: 220px; overflow-y: auto; color: #e6edf3; display: none;
     }
@@ -149,6 +135,10 @@
     .response.error { border-color: #f85149; color: #ff7b72; }
     .response.show  { display: block; }
 
+    .card-wide-inner { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+    .canvas-col { }
+    .props-col { }
+    @media (max-width: 900px) { .card-wide-inner { grid-template-columns: 1fr; } }
     footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #21262d; font-size: .82rem; color: #484f58; }
   </style>
 </head>
@@ -174,22 +164,43 @@
 <h2>Playground</h2>
 <div class="playground">
 
-  <!-- ── Создать полигон ── -->
-  <div class="card">
+  <!-- Создать полигон -->
+  <div class="card card-wide">
     <h3><span class="method POST">POST</span> Создать полигон</h3>
 
     <label>Название</label>
     <input id="create-name" type="text" placeholder="Зона А">
 
-    <label>Нарисуй полигон — кликай по полю чтобы добавить точки</label>
-    <div class="canvas-wrap" id="canvas-wrap">
-      <canvas id="draw-canvas"></canvas>
-      <span class="canvas-hint">клик — добавить точку · двойной клик — замкнуть</span>
-    </div>
 
-    <!-- список координат -->
-    <textarea id="canvas-coords" rows="3" oninput="coordsEdited()" placeholder="нет точек" style="width:100%; background:#0d1117; border:1px solid #21262d; border-radius:5px; padding:.5rem .7rem; font-family:'Cascadia Code','Fira Code',monospace; font-size:.75rem; color:#8b949e; resize:vertical; outline:none; margin-top:.5rem;"></textarea>
-    <div class="hint">Формат: x=10, y=20 — по одной точке на строке. Редактируй и canvas обновится.</div>
+    <div class="card-wide-inner">
+    <div class="canvas-col">
+    <div class="canvas-outer">
+      <!-- Ось Y -->
+      <div class="y-axis" id="y-axis">
+        <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+      </div>
+      <div class="canvas-inner">
+        <div class="canvas-wrap" id="canvas-wrap">
+          <canvas id="draw-canvas"></canvas>
+          <span class="canvas-hint">клик — добавить точку · двойной клик — замкнуть</span>
+        </div>
+        <!-- Ось X -->
+        <div class="x-axis">
+          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+        </div>
+        <div style="text-align:center; font-size:.78rem; color:#6e7681; font-family:monospace; margin-top:2px;">X →</div>
+      </div>
+    </div>
+    <!-- метка оси Y -->
+    <div style="font-size:.78rem; color:#6e7681; font-family:monospace; text-align:left; margin-top:2px; padding-left:36px;">↑ Y</div>
+
+    </div><!-- end canvas-col -->
+    <div class="props-col">
+    <label>Координаты точек (x,y — одна на строку)</label>
+    <textarea id="canvas-coords" rows="3" oninput="coordsEdited()" placeholder="нет точек"
+      style="width:100%; background:#0d1117; border:1px solid #21262d; border-radius:5px;
+             padding:.5rem .7rem; font-family:'Cascadia Code','Fira Code',monospace;
+             font-size:.75rem; color:#8b949e; resize:vertical; outline:none; margin-top:.3rem;"></textarea>
 
     <div class="canvas-btns">
       <button class="ghost" onclick="undoPoint()">← отменить точку</button>
@@ -200,6 +211,8 @@
     <input id="create-props" type="text" placeholder='{"region": "Moscow"}'>
 
     <button onclick="createPolygon()">Создать</button>
+    </div><!-- end props-col -->
+    </div><!-- end card-wide-inner -->
 
     <div class="id-banner" id="create-id-banner">
       <span class="id-banner-label">ID →</span>
@@ -210,7 +223,7 @@
     <div class="response" id="create-resp"></div>
   </div>
 
-  <!-- ── Точка в полигоне ── -->
+  <!-- Точка в полигоне -->
   <div class="card">
     <h3><span class="method POST">POST</span> Точка в полигоне</h3>
 
@@ -218,21 +231,20 @@
     <div class="row" style="align-items:center; gap:.5rem;">
       <div style="flex:1;">
         <div style="font-size:.72rem; color:#484f58; margin-bottom:.2rem;">X</div>
-        <input id="pip-x" type="number" placeholder="например: 5" value="5">
+        <input id="pip-x" type="number" placeholder="0–100" value="50">
       </div>
       <div style="flex:1;">
         <div style="font-size:.72rem; color:#484f58; margin-bottom:.2rem;">Y</div>
-        <input id="pip-y" type="number" placeholder="например: 5" value="5">
+        <input id="pip-y" type="number" placeholder="0–100" value="50">
       </div>
     </div>
-    <div class="hint" style="margin-top:.4rem;">Координаты полигона на canvas: левый нижний угол = 0,0 · правый верхний = 100,100</div>
 
     <label>Алгоритм</label>
     <select id="pip-algo">
       <option value="ray_casting">ray_casting</option>
       <option value="winding_number">winding_number</option>
     </select>
-    
+
     <label style="display:flex; align-items:center; gap:.5rem; margin-top:.7rem; cursor:pointer;">
       <input id="pip-boundary" type="checkbox" checked style="width:auto">
       Считать точку на границе попаданием
@@ -250,7 +262,7 @@
     <div class="response" id="pip-resp"></div>
   </div>
 
-  <!-- ── Получить / удалить ── -->
+  <!-- Получить / удалить -->
   <div class="card">
     <h3>Получить или удалить полигон</h3>
     <label>ID полигона</label>
@@ -260,7 +272,7 @@
     <div class="response" id="byid-resp"></div>
   </div>
 
-  <!-- ── Обновить ── -->
+  <!-- Обновить -->
   <div class="card">
     <h3><span class="method PUT">PUT</span> Обновить полигон</h3>
     <label>ID полигона</label>
@@ -273,139 +285,145 @@
 
 </div>
 
+
 <script>
-// ── Canvas-редактор ────────────────────────────────────────────────────────
-const canvas  = document.getElementById('draw-canvas');
-const ctx     = canvas.getContext('2d');
-let points    = [];   
-let closed    = false;
+const canvas = document.getElementById('draw-canvas');
+const ctx    = canvas.getContext('2d');
+let points   = [];
+let closed   = false;
+
+const PAD = 8;
 
 function resizeCanvas() {
   const wrap = document.getElementById('canvas-wrap');
   canvas.width  = wrap.clientWidth;
-  canvas.height = 260;
+  canvas.height = 380;
   redraw();
 }
-
 window.addEventListener('load',   resizeCanvas);
 window.addEventListener('resize', resizeCanvas);
 
+function toCanvas(lx, ly) {
+  const W = canvas.width  - PAD * 2;
+  const H = canvas.height - PAD * 2;
+  return {
+    cx: PAD + (lx / 100) * W,
+    cy: PAD + ((100 - ly) / 100) * H 
+  };
+}
+
+function fromCanvas(cx, cy) {
+  const W = canvas.width  - PAD * 2;
+  const H = canvas.height - PAD * 2;
+  return {
+    x: Math.round(((cx - PAD) / W) * 100),
+    y: Math.round(((PAD + H - cy) / H) * 100)
+  };
+}
+
 canvas.addEventListener('click', e => {
   if (closed) return;
-  const r  = canvas.getBoundingClientRect();
-  const cx = (e.clientX - r.left) * (canvas.width  / r.width);
-  const cy = (e.clientY - r.top)  * (canvas.height / r.height);
+  const r   = canvas.getBoundingClientRect();
+  const cx  = (e.clientX - r.left) * (canvas.width  / r.width);
+  const cy  = (e.clientY - r.top)  * (canvas.height / r.height);
+  const log = fromCanvas(cx, cy);
 
-  // двойной клик = замкнуть
+  // клик на первую точку = замкнуть
   if (points.length >= 3) {
-    const first = points[0];
-    const dist  = Math.hypot(cx - first.x, cy - first.y);
-    if (dist < 14) { closed = true; redraw(); updateCoords(); return; }
+    const first = toCanvas(points[0].x, points[0].y);
+    if (Math.hypot(cx - first.cx, cy - first.cy) < 14) {
+      closed = true; redraw(); syncTextarea(); return;
+    }
   }
 
-  points.push({ x: cx, y: cy });
+  points.push(log);
   redraw();
-  updateCoords();
+  syncTextarea();
 });
 
 canvas.addEventListener('dblclick', e => {
-  if (points.length >= 3) { closed = true; redraw(); updateCoords(); }
+  if (points.length >= 3) { closed = true; redraw(); syncTextarea(); }
 });
 
 function undoPoint() {
-  if (closed) { closed = false; }
-  else { points.pop(); }
-  redraw(); updateCoords();
+  if (closed) { closed = false; } else { points.pop(); }
+  redraw(); syncTextarea();
 }
 
 function clearCanvas() {
-  points = []; closed = false;
-  redraw(); updateCoords();
+  points = []; closed = false; redraw(); syncTextarea();
 }
 
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // сетка
+  ctx.strokeStyle = '#1a1f27';
+  ctx.lineWidth   = 1;
+  [25, 50, 75].forEach(v => {
+    // вертикальные линии
+    const {cx} = toCanvas(v, 0);
+    ctx.beginPath(); ctx.moveTo(cx, PAD); ctx.lineTo(cx, canvas.height - PAD); ctx.stroke();
+    // горизонтальные линии
+    const {cy} = toCanvas(0, v);
+    ctx.beginPath(); ctx.moveTo(PAD, cy); ctx.lineTo(canvas.width - PAD, cy); ctx.stroke();
+  });
+
   if (points.length === 0) {
-    ctx.fillStyle = '#484f58'; ctx.font = '13px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('кликни чтобы добавить первую точку', canvas.width/2, canvas.height/2);
+    ctx.fillStyle = '#484f58'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('кликни чтобы добавить первую точку', canvas.width / 2, canvas.height / 2);
     return;
   }
 
-  // заливка если замкнут
+  const canvasPoints = points.map(p => toCanvas(p.x, p.y));
+
+  // заливка
   if (closed && points.length >= 3) {
     ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.moveTo(canvasPoints[0].cx, canvasPoints[0].cy);
+    canvasPoints.slice(1).forEach(p => ctx.lineTo(p.cx, p.cy));
     ctx.closePath();
-    ctx.fillStyle = '#1f6feb22';
-    ctx.fill();
+    ctx.fillStyle = '#1f6feb22'; ctx.fill();
   }
 
   // рёбра
   ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.moveTo(canvasPoints[0].cx, canvasPoints[0].cy);
+  canvasPoints.slice(1).forEach(p => ctx.lineTo(p.cx, p.cy));
   if (closed) ctx.closePath();
-  ctx.strokeStyle = '#58a6ff';
-  ctx.lineWidth   = 1.5;
-  ctx.stroke();
+  ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 1.5; ctx.stroke();
 
-  // подсветка первой точки (зона замыкания)
+  // зона замыкания
   if (!closed && points.length >= 3) {
     ctx.beginPath();
-    ctx.arc(points[0].x, points[0].y, 10, 0, Math.PI * 2);
-    ctx.strokeStyle = '#3fb95055';
-    ctx.lineWidth   = 1;
-    ctx.stroke();
+    ctx.arc(canvasPoints[0].cx, canvasPoints[0].cy, 10, 0, Math.PI * 2);
+    ctx.strokeStyle = '#3fb95055'; ctx.lineWidth = 1; ctx.stroke();
   }
 
-  // точки и подписи
-  points.forEach((p, i) => {
+  // точки и подписи (берём прямо из points[] — логические координаты)
+  canvasPoints.forEach((cp, i) => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, i === 0 ? 5 : 4, 0, Math.PI * 2);
-    ctx.fillStyle = i === 0 ? '#3fb950' : '#58a6ff';
-    ctx.fill();
+    ctx.arc(cp.cx, cp.cy, i === 0 ? 5 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#3fb950' : '#58a6ff'; ctx.fill();
 
-    const coord = canvasToLogical(p);
-    ctx.fillStyle    = '#8b949e';
-    ctx.font         = '10px monospace';
-    ctx.textAlign    = 'center';
-    ctx.fillText(`${coord.x},${coord.y}`, p.x, p.y - 9);
+    ctx.fillStyle = '#c9d1d9'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`${points[i].x},${points[i].y}`, cp.cx, cp.cy - 11);
   });
 }
 
-function canvasToLogical(p) {
-  return {
-    x: Math.round((p.x / canvas.width)  * 100),
-    y: Math.round(((canvas.height - p.y) / canvas.height) * 100)
-  };
-}
-
-function getLogicalPoints() {
-  return points.map(canvasToLogical);
-}
-
-function updateCoords() {
-  const el  = document.getElementById('canvas-coords');
-  const pts = getLogicalPoints();
-  if (pts.length === 0) { el.value = ''; return; }
-  el.value = pts.map(p => `${p.x},${p.y}`).join('\n');
+function syncTextarea() {
+  const el = document.getElementById('canvas-coords');
+  el.value = points.length ? points.map(p => `${p.x},${p.y}`).join('\n') : '';
 }
 
 function coordsEdited() {
-  // парсим textarea и обновляем точки
   const raw = document.getElementById('canvas-coords').value;
   const lines = raw.trim().split('\n').map(l => l.trim()).filter(Boolean);
   const newPts = [];
   for (const line of lines) {
     const parts = line.split(',').map(s => parseFloat(s.trim()));
     if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-      // логические → canvas координаты
-      const cx = (parts[0] / 100) * canvas.width;
-      const cy = canvas.height - (parts[1] / 100) * canvas.height;
-      newPts.push({ x: cx, y: cy });
+      newPts.push({ x: Math.round(parts[0]), y: Math.round(parts[1]) });
     }
   }
   points = newPts;
@@ -447,21 +465,16 @@ function copyId() {
   setTimeout(() => { btn.textContent = 'копировать'; }, 1500);
 }
 
-// ── Создать полигон ───────────────────────────────────────────────────────
 async function createPolygon() {
   const name  = document.getElementById('create-name').value.trim();
   const props = document.getElementById('create-props').value.trim();
-
   if (!name) return showResp('create-resp', { error: 'Введите название' }, false);
-
-  const pts = getLogicalPoints();
-  if (pts.length < 3) return showResp('create-resp', { error: 'Нужно минимум 3 точки' }, false);
-
+  if (points.length < 3) return showResp('create-resp', { error: 'Нужно минимум 3 точки' }, false);
   let properties = {};
   if (props) { try { properties = JSON.parse(props); } catch { return showResp('create-resp', { error: 'Ошибка парсинга properties' }, false); } }
 
   const { ok, data } = await req('POST', '/polygons', {
-    name, geometry: { type: 'Polygon', coordinates: toGeoJsonCoords(pts) }, properties
+    name, geometry: { type: 'Polygon', coordinates: toGeoJsonCoords(points) }, properties
   });
 
   const respEl = document.getElementById('create-resp');
@@ -478,10 +491,9 @@ async function createPolygon() {
   btn.style.display = 'block'; btn.textContent = 'показать JSON ▾';
 }
 
-// ── Проверить точку ───────────────────────────────────────────────────────
 async function checkPoint() {
-  const x    = parseFloat(document.getElementById('pip-x').value);
-  const y    = parseFloat(document.getElementById('pip-y').value);
+  const x   = parseFloat(document.getElementById('pip-x').value);
+  const y   = parseFloat(document.getElementById('pip-y').value);
   const algo = document.getElementById('pip-algo').value;
   const inc  = document.getElementById('pip-boundary').checked;
   if (isNaN(x) || isNaN(y)) return;
@@ -500,10 +512,9 @@ async function checkPoint() {
   const namesEl   = document.getElementById('pip-names');
 
   if (!ok) {
-    resultEl.className   = 'pip-result show miss';
+    resultEl.className    = 'pip-result show miss';
     verdictEl.textContent = data.error || 'Ошибка запроса';
-    namesEl.textContent   = '';
-    return;
+    namesEl.textContent   = ''; return;
   }
   const hit = data.matching_count > 0;
   resultEl.className    = `pip-result show ${hit ? 'hit' : 'miss'}`;
@@ -515,13 +526,13 @@ async function checkPoint() {
     : '';
 }
 
-// ── Получить / удалить ────────────────────────────────────────────────────
 async function getPolygon() {
   const id = document.getElementById('byid-id').value.trim();
   if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
   const { ok, data } = await req('GET', `/polygons/${id}`);
   showResp('byid-resp', data, ok);
 }
+
 async function deletePolygon() {
   const id = document.getElementById('byid-id').value.trim();
   if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
@@ -529,11 +540,10 @@ async function deletePolygon() {
   showResp('byid-resp', data, ok);
 }
 
-// ── Обновить ──────────────────────────────────────────────────────────────
 async function updatePolygon() {
   const id   = document.getElementById('upd-id').value.trim();
   const name = document.getElementById('upd-name').value.trim();
-  if (!id)   return showResp('upd-resp', { error: 'Введите ID' }, false);
+  if (!id) return showResp('upd-resp', { error: 'Введите ID' }, false);
   const body = {};
   if (name) body.name = name;
   if (!Object.keys(body).length) return showResp('upd-resp', { error: 'Нечего обновлять' }, false);
