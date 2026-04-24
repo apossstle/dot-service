@@ -7,12 +7,9 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0d1117;
-      color: #c9d1d9;
-      padding: 2rem;
-      line-height: 1.6;
+      background: #0d1117; color: #c9d1d9;
+      padding: 2rem; line-height: 1.6;
     }
-
     header { border-bottom: 1px solid #21262d; padding-bottom: 1rem; margin-bottom: 2rem; }
     h1 { font-size: 1.8rem; color: #58a6ff; }
     h2 { color: #58a6ff; font-size: 1.1rem; margin: 2rem 0 .8rem; }
@@ -23,44 +20,34 @@
          font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
     td { padding: .55rem 1rem; border-bottom: 1px solid #21262d; }
     tbody tr:hover { background: #161b22; }
-
-    .method {
-      display: inline-block; padding: .15rem .5rem;
-      border-radius: 4px; font-size: .78rem; font-weight: 700; font-family: monospace;
-    }
+    .method { display: inline-block; padding: .15rem .5rem; border-radius: 4px;
+              font-size: .78rem; font-weight: 700; font-family: monospace; }
     .GET    { background: #1f6feb33; color: #79c0ff; border: 1px solid #1f6feb; }
     .POST   { background: #3fb95033; color: #56d364; border: 1px solid #3fb950; }
     .PUT    { background: #d2992233; color: #e3b341; border: 1px solid #d29922; }
     .DELETE { background: #f8514933; color: #ff7b72; border: 1px solid #f85149; }
-
-    .url { font-family: monospace; color: #c9d1d9; }
-    .url a { color: #58a6ff; text-decoration: none; }
+    .url a  { color: #58a6ff; text-decoration: none; font-family: monospace; }
     .url a:hover { text-decoration: underline; }
+    .url { font-family: monospace; }
     .desc { color: #8b949e; font-size: .88rem; }
 
     .playground { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: .5rem; }
     @media (max-width: 900px) { .playground { grid-template-columns: 1fr; } }
 
     .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 1.2rem; }
-    .card h3 {
-      font-size: .82rem; color: #8b949e; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem;
-      display: flex; align-items: center; gap: .5rem;
-    }
+    .card h3 { font-size: .82rem; color: #8b949e; font-weight: 600;
+               text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem;
+               display: flex; align-items: center; gap: .5rem; }
 
     label { display: block; font-size: .82rem; color: #8b949e; margin-bottom: .3rem; margin-top: .7rem; }
-    label:first-of-type { margin-top: 0; }
-
-    input, textarea, select {
+    input, select {
       width: 100%; background: #0d1117; border: 1px solid #30363d;
       border-radius: 5px; color: #c9d1d9; font-size: .85rem;
       padding: .45rem .7rem; font-family: 'Cascadia Code', 'Fira Code', monospace;
       outline: none; transition: border-color .15s;
     }
-    input:focus, textarea:focus, select:focus { border-color: #58a6ff; }
-    textarea { resize: vertical; }
+    input:focus, select:focus { border-color: #58a6ff; }
     .hint { font-size: .75rem; color: #484f58; margin-top: .25rem; }
-
     .row { display: flex; gap: .5rem; }
     .row input { flex: 1; }
 
@@ -76,15 +63,40 @@
     button.warn   { background: #92400e; }
     button.warn:hover   { background: #b45309; }
     button.mt-sm  { margin-top: .4rem; }
-
-    .preview-wrap {
-      margin-top: .8rem; background: #0d1117;
-      border: 1px solid #30363d; border-radius: 6px;
-      overflow: hidden; position: relative;
+    button.ghost  {
+      background: transparent; color: #484f58;
+      border: 1px solid #30363d; font-size: .78rem; font-weight: 500;
     }
-    .preview-label { position: absolute; top: .4rem; left: .6rem; font-size: .7rem; color: #484f58; pointer-events: none; }
-    canvas { display: block; width: 100%; height: 180px; }
+    button.ghost:hover { color: #6e7681; border-color: #3d444d; background: #161b22; }
 
+    /* ── Canvas-редактор полигона ── */
+    .canvas-wrap {
+      margin-top: .8rem;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      cursor: crosshair;
+    }
+    .canvas-wrap canvas { display: block; width: 100%; height: 260px; }
+    .canvas-hint {
+      position: absolute; bottom: .5rem; left: 50%; transform: translateX(-50%);
+      font-size: .7rem; color: #484f58; pointer-events: none; white-space: nowrap;
+    }
+    .canvas-coords {
+      margin-top: .5rem;
+      background: #0d1117; border: 1px solid #21262d;
+      border-radius: 5px; padding: .5rem .7rem;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: .75rem; color: #8b949e;
+      max-height: 80px; overflow-y: auto;
+      min-height: 28px;
+    }
+    .canvas-btns { display: flex; gap: .5rem; margin-top: .5rem; }
+    .canvas-btns button { margin-top: 0; flex: 1; padding: .35rem; font-size: .78rem; }
+
+    /* ── ID-баннер ── */
     .id-banner {
       margin-top: .8rem; background: #0d1117;
       border: 1px solid #3fb950; border-radius: 6px;
@@ -98,29 +110,26 @@
       font-size: .78rem; color: #c9d1d9;
       flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .id-copy {
-      font-size: .72rem; color: #58a6ff; cursor: pointer;
-      white-space: nowrap; border: none; background: none;
-      padding: 0; margin: 0; width: auto; font-weight: 600;
-    }
+    .id-copy { font-size: .72rem; color: #58a6ff; cursor: pointer;
+               white-space: nowrap; border: none; background: none;
+               padding: 0; margin: 0; width: auto; font-weight: 600; }
     .id-copy:hover { color: #79c0ff; }
 
+    /* ── PIP результат ── */
     .pip-result {
       margin-top: .8rem; border-radius: 6px;
-      padding: .7rem 1rem; display: none;
-      align-items: flex-start; gap: .8rem;
+      padding: .7rem 1rem; display: none; align-items: flex-start; gap: .8rem;
     }
     .pip-result.show { display: flex; }
     .pip-result.hit  { background: #1a2e1a; border: 1px solid #3fb950; }
     .pip-result.miss { background: #2e1a1a; border: 1px solid #f85149; }
-    .pip-icon { display: none; }
     .pip-text { flex: 1; }
     .pip-text b { display: block; font-size: .9rem; }
     .pip-result.hit  .pip-text b { color: #3fb950; }
     .pip-result.miss .pip-text b { color: #f85149; }
     .pip-names { font-size: .78rem; color: #8b949e; margin-top: .2rem; font-family: monospace; white-space: pre; }
 
-    /* кнопка показать JSON */
+    /* ── JSON блок ── */
     .json-toggle {
       margin-top: .5rem; width: 100%; padding: .35rem;
       background: transparent; color: #484f58;
@@ -129,8 +138,6 @@
       transition: color .15s, border-color .15s;
     }
     .json-toggle:hover { color: #6e7681; border-color: #3d444d; background: #161b22; }
-
-    /* JSON блок */
     .response {
       margin-top: .5rem; background: #0d1117; border: 1px solid #21262d;
       border-radius: 5px; padding: .7rem .9rem;
@@ -147,47 +154,46 @@
 </head>
 <body>
 
-<header>
-  <h1>Polygon Service</h1>
-</header>
+<header><h1>Polygon Service</h1></header>
 
 <h2>API эндпоинты</h2>
 <table>
   <thead><tr><th>Метод</th><th>URL</th><th>Описание</th></tr></thead>
   <tbody>
     <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/health">/health</a></td><td class="desc">Статус сервиса</td></tr>
-    <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/stats">/stats</a></td><td class="desc">Статистика пространственного индекса</td></tr>
+    <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/stats">/stats</a></td><td class="desc">Статистика индекса</td></tr>
     <tr><td><span class="method GET">GET</span></td><td class="url"><a href="/polygons">/polygons</a></td><td class="desc">Список всех полигонов</td></tr>
     <tr><td><span class="method POST">POST</span></td><td class="url">/polygons</td><td class="desc">Создать полигон</td></tr>
     <tr><td><span class="method GET">GET</span></td><td class="url">/polygons/{id}</td><td class="desc">Получить полигон по ID</td></tr>
     <tr><td><span class="method PUT">PUT</span></td><td class="url">/polygons/{id}</td><td class="desc">Обновить полигон</td></tr>
     <tr><td><span class="method DELETE">DELETE</span></td><td class="url">/polygons/{id}</td><td class="desc">Удалить полигон</td></tr>
-    <tr><td><span class="method POST">POST</span></td><td class="url">/query/point-in-polygon</td><td class="desc">Найти полигоны, содержащие точку</td></tr>
+    <tr><td><span class="method POST">POST</span></td><td class="url">/query/point-in-polygon</td><td class="desc">Найти полигоны по точке</td></tr>
   </tbody>
 </table>
 
 <h2>Playground</h2>
 <div class="playground">
 
-  <!-- Создать полигон -->
+  <!-- ── Создать полигон ── -->
   <div class="card">
     <h3><span class="method POST">POST</span> Создать полигон</h3>
 
     <label>Название</label>
-    <input id="create-name" type="text" placeholder="например: полигон1">
+    <input id="create-name" type="text" placeholder="Зона А">
 
-    <label>Вершины полигона</label>
-    <textarea id="create-pts" rows="4"
-      placeholder="Каждая точка на новой строке:&#10;0,0&#10;10,0&#10;10,10&#10;0,10"
-      oninput="drawPreview()">0,0
-10,0
-10,10
-0,10</textarea>
-    <div class="hint">Формат: x,y на каждой строке. Минимум 3 точки.</div>
+    <label>Нарисуй полигон — кликай по полю чтобы добавить точки</label>
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="draw-canvas"></canvas>
+      <span class="canvas-hint">клик — добавить точку · двойной клик — замкнуть</span>
+    </div>
 
-    <div class="preview-wrap">
-      <span class="preview-label">превью</span>
-      <canvas id="preview-canvas"></canvas>
+    <!-- список координат -->
+    <textarea id="canvas-coords" rows="3" oninput="coordsEdited()" placeholder="нет точек" style="width:100%; background:#0d1117; border:1px solid #21262d; border-radius:5px; padding:.5rem .7rem; font-family:'Cascadia Code','Fira Code',monospace; font-size:.75rem; color:#8b949e; resize:vertical; outline:none; margin-top:.5rem;"></textarea>
+    <div class="hint">Формат: x=10, y=20 — по одной точке на строке. Редактируй и canvas обновится.</div>
+
+    <div class="canvas-btns">
+      <button class="ghost" onclick="undoPoint()">← отменить точку</button>
+      <button class="ghost" onclick="clearCanvas()">очистить</button>
     </div>
 
     <label>Properties (JSON, опционально)</label>
@@ -200,28 +206,33 @@
       <span class="id-banner-value" id="create-id-value"></span>
       <button class="id-copy" onclick="copyId()">копировать</button>
     </div>
-
-    <button class="json-toggle" id="create-json-btn" onclick="toggleJson('create-resp', 'create-json-btn')" style="display:none">
-      показать JSON ▾
-    </button>
+    <button class="json-toggle" id="create-json-btn" onclick="toggleJson('create-resp','create-json-btn')" style="display:none">показать JSON ▾</button>
     <div class="response" id="create-resp"></div>
   </div>
 
-  <!-- Точка в полигоне -->
+  <!-- ── Точка в полигоне ── -->
   <div class="card">
     <h3><span class="method POST">POST</span> Точка в полигоне</h3>
 
     <label>Координаты точки</label>
-    <div class="row">
-      <input id="pip-x" type="number" placeholder="x" value="5">
-      <input id="pip-y" type="number" placeholder="y" value="5">
+    <div class="row" style="align-items:center; gap:.5rem;">
+      <div style="flex:1;">
+        <div style="font-size:.72rem; color:#484f58; margin-bottom:.2rem;">X — горизонталь →</div>
+        <input id="pip-x" type="number" placeholder="например: 5" value="5">
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:.72rem; color:#484f58; margin-bottom:.2rem;">Y — вертикаль ↑</div>
+        <input id="pip-y" type="number" placeholder="например: 5" value="5">
+      </div>
     </div>
+    <div class="hint" style="margin-top:.4rem;">Координаты полигона на canvas: левый нижний угол = 0,0 · правый верхний = 100,100</div>
 
     <label>Алгоритм</label>
     <select id="pip-algo">
       <option value="ray_casting">ray_casting</option>
       <option value="winding_number">winding_number</option>
     </select>
+    <div class="hint" style="margin-top:.4rem;">Оба алгоритма корректно обрабатывают дырки — точка внутри отверстия вернёт <b style="color:#ff7b72">outside</b></div>
 
     <label style="display:flex; align-items:center; gap:.5rem; margin-top:.7rem; cursor:pointer;">
       <input id="pip-boundary" type="checkbox" checked style="width:auto">
@@ -231,264 +242,307 @@
     <button onclick="checkPoint()">Проверить</button>
 
     <div class="pip-result" id="pip-result">
-      <div class="pip-icon" id="pip-icon"></div>
       <div class="pip-text">
         <b id="pip-verdict"></b>
         <div class="pip-names" id="pip-names"></div>
       </div>
     </div>
-
-    <button class="json-toggle" id="pip-json-btn" onclick="toggleJson('pip-resp', 'pip-json-btn')" style="display:none">
-      показать JSON ▾
-    </button>
+    <button class="json-toggle" id="pip-json-btn" onclick="toggleJson('pip-resp','pip-json-btn')" style="display:none">показать JSON ▾</button>
     <div class="response" id="pip-resp"></div>
   </div>
 
-  <!-- Получить / удалить -->
+  <!-- ── Получить / удалить ── -->
   <div class="card">
     <h3>Получить или удалить полигон</h3>
-
     <label>ID полигона</label>
     <input id="byid-id" type="text" placeholder="вставь id из баннера выше">
-
     <button onclick="getPolygon()">Получить (GET)</button>
     <button class="danger mt-sm" onclick="deletePolygon()">Удалить (DELETE)</button>
     <div class="response" id="byid-resp"></div>
   </div>
 
-  <!-- Обновить -->
+  <!-- ── Обновить ── -->
   <div class="card">
     <h3><span class="method PUT">PUT</span> Обновить полигон</h3>
-
     <label>ID полигона</label>
     <input id="upd-id" type="text" placeholder="вставь id из баннера выше">
-
     <label>Новое название (опционально)</label>
     <input id="upd-name" type="text" placeholder="оставь пустым, чтобы не менять">
-
-    <label>Новые вершины (опционально)</label>
-    <textarea id="upd-pts" rows="3" placeholder="оставь пустым, чтобы не менять геометрию"></textarea>
-    <div class="hint">Формат: x,y на каждой строке.</div>
-
     <button class="warn" onclick="updatePolygon()">Обновить</button>
     <div class="response" id="upd-resp"></div>
   </div>
 
 </div>
 
+<footer>Polygon Service · Python {python_version}</footer>
+
 <script>
-  function parsePoints(text) {
-    const pts = text.trim().split('\n')
-      .map(l => l.trim()).filter(Boolean)
-      .map(l => {
-        const [x, y] = l.split(',').map(Number);
-        if (isNaN(x) || isNaN(y)) throw new Error(`Неверная точка: "${l}"`);
-        return [x, y];
-      });
-    if (pts.length < 3) throw new Error('Нужно минимум 3 точки');
-    return pts;
+// ── Canvas-редактор ────────────────────────────────────────────────────────
+const canvas  = document.getElementById('draw-canvas');
+const ctx     = canvas.getContext('2d');
+let points    = [];   
+let closed    = false;
+
+function resizeCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  canvas.width  = wrap.clientWidth;
+  canvas.height = 260;
+  redraw();
+}
+
+window.addEventListener('load',   resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
+
+canvas.addEventListener('click', e => {
+  if (closed) return;
+  const r  = canvas.getBoundingClientRect();
+  const cx = (e.clientX - r.left) * (canvas.width  / r.width);
+  const cy = (e.clientY - r.top)  * (canvas.height / r.height);
+
+  // двойной клик = замкнуть
+  if (points.length >= 3) {
+    const first = points[0];
+    const dist  = Math.hypot(cx - first.x, cy - first.y);
+    if (dist < 14) { closed = true; redraw(); updateCoords(); return; }
   }
 
-  function toGeoJsonCoords(pts) {
-    return [[...pts, pts[0]]];
+  points.push({ x: cx, y: cy });
+  redraw();
+  updateCoords();
+});
+
+canvas.addEventListener('dblclick', e => {
+  if (points.length >= 3) { closed = true; redraw(); updateCoords(); }
+});
+
+function undoPoint() {
+  if (closed) { closed = false; }
+  else { points.pop(); }
+  redraw(); updateCoords();
+}
+
+function clearCanvas() {
+  points = []; closed = false;
+  redraw(); updateCoords();
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (points.length === 0) {
+    ctx.fillStyle = '#484f58'; ctx.font = '13px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('кликни чтобы добавить первую точку', canvas.width/2, canvas.height/2);
+    return;
   }
 
-  // превью
-  function drawPreview() {
-    const canvas = document.getElementById('preview-canvas');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.offsetWidth || 300, H = canvas.offsetHeight || 180;
-    canvas.width = W; canvas.height = H;
-    ctx.clearRect(0, 0, W, H);
-
-    let pts;
-    try { pts = parsePoints(document.getElementById('create-pts').value); }
-    catch {
-      ctx.fillStyle = '#484f58'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
-      ctx.fillText('введи точки чтобы увидеть фигуру', W/2, H/2);
-      return;
-    }
-
-    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const pad = 28;
-    const scale = Math.min(
-      maxX === minX ? 1 : (W - pad*2) / (maxX - minX),
-      maxY === minY ? 1 : (H - pad*2) / (maxY - minY)
-    );
-    const offX = pad + ((W - pad*2) - (maxX - minX) * scale) / 2;
-    const offY = pad + ((H - pad*2) - (maxY - minY) * scale) / 2;
-    const tx = x => offX + (x - minX) * scale;
-    const ty = y => offY + (maxY - y) * scale;
-
+  // заливка если замкнут
+  if (closed && points.length >= 3) {
     ctx.beginPath();
-    ctx.moveTo(tx(pts[0][0]), ty(pts[0][1]));
-    pts.slice(1).forEach(([x,y]) => ctx.lineTo(tx(x), ty(y)));
+    ctx.moveTo(points[0].x, points[0].y);
+    points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
     ctx.closePath();
-    ctx.fillStyle = '#1f6feb22'; ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 1.5;
-    ctx.fill(); ctx.stroke();
-
-    pts.forEach(([x, y]) => {
-      const cx = tx(x), cy = ty(y);
-      ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI*2);
-      ctx.fillStyle = '#58a6ff'; ctx.fill();
-      ctx.fillStyle = '#8b949e'; ctx.font = '10px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(`${x},${y}`, cx, cy - 8);
-    });
+    ctx.fillStyle = '#1f6feb22';
+    ctx.fill();
   }
 
-  window.addEventListener('load', drawPreview);
-  window.addEventListener('resize', drawPreview);
+  // рёбра
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+  if (closed) ctx.closePath();
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
 
-  // утилиты
-  async function req(method, url, body) {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body !== undefined) opts.body = JSON.stringify(body);
-    const r = await fetch(url, opts);
-    return { ok: r.ok, data: await r.json() };
+  // подсветка первой точки (зона замыкания)
+  if (!closed && points.length >= 3) {
+    ctx.beginPath();
+    ctx.arc(points[0].x, points[0].y, 10, 0, Math.PI * 2);
+    ctx.strokeStyle = '#3fb95055';
+    ctx.lineWidth   = 1;
+    ctx.stroke();
   }
 
-  function showResp(id, data, ok) {
-    const el = document.getElementById(id);
-    el.textContent = JSON.stringify(data, null, 2);
-    el.className = 'response show ' + (ok ? 'ok' : 'error');
-  }
+  // точки и подписи
+  points.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, i === 0 ? 5 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#3fb950' : '#58a6ff';
+    ctx.fill();
 
-  function toggleJson(respId, btnId) {
-    const el  = document.getElementById(respId);
-    const btn = document.getElementById(btnId);
-    const visible = el.classList.contains('show');
-    el.classList.toggle('show', !visible);
-    btn.textContent = visible ? 'показать JSON ▾' : 'скрыть JSON ▴';
-  }
+    const coord = canvasToLogical(p);
+    ctx.fillStyle    = '#8b949e';
+    ctx.font         = '10px monospace';
+    ctx.textAlign    = 'center';
+    ctx.fillText(`${coord.x},${coord.y}`, p.x, p.y - 9);
+  });
+}
 
-  function copyId() {
-    const val = document.getElementById('create-id-value').textContent;
-    navigator.clipboard.writeText(val).catch(() => {});
-    const btn = document.querySelector('.id-copy');
-    btn.textContent = 'скопировано!';
-    setTimeout(() => { btn.textContent = 'копировать'; }, 1500);
-  }
+function canvasToLogical(p) {
+  return {
+    x: Math.round((p.x / canvas.width)  * 100),
+    y: Math.round(((canvas.height - p.y) / canvas.height) * 100)
+  };
+}
 
-  // создать полигон
-  async function createPolygon() {
-    const name  = document.getElementById('create-name').value.trim();
-    const props = document.getElementById('create-props').value.trim();
-    if (!name) {
-      document.getElementById('create-id-banner').className = 'id-banner';
-      document.getElementById('create-json-btn').style.display = 'none';
-      return showResp('create-resp', { error: 'Введите название' }, false);
+function getLogicalPoints() {
+  return points.map(canvasToLogical);
+}
+
+function updateCoords() {
+  const el  = document.getElementById('canvas-coords');
+  const pts = getLogicalPoints();
+  if (pts.length === 0) { el.value = ''; return; }
+  el.value = pts.map(p => `${p.x},${p.y}`).join('\n');
+}
+
+function coordsEdited() {
+  // парсим textarea и обновляем точки
+  const raw = document.getElementById('canvas-coords').value;
+  const lines = raw.trim().split('\n').map(l => l.trim()).filter(Boolean);
+  const newPts = [];
+  for (const line of lines) {
+    const parts = line.split(',').map(s => parseFloat(s.trim()));
+    if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+      // логические → canvas координаты
+      const cx = (parts[0] / 100) * canvas.width;
+      const cy = canvas.height - (parts[1] / 100) * canvas.height;
+      newPts.push({ x: cx, y: cy });
     }
-
-    let pts, properties = {};
-    try { pts = parsePoints(document.getElementById('create-pts').value); }
-    catch (e) { return showResp('create-resp', { error: e.message }, false); }
-    if (props) {
-      try { properties = JSON.parse(props); }
-      catch { return showResp('create-resp', { error: 'Ошибка парсинга properties' }, false); }
-    }
-
-    const { ok, data } = await req('POST', '/polygons', {
-      name, geometry: { type: 'Polygon', coordinates: toGeoJsonCoords(pts) }, properties
-    });
-
-    // сохраняем JSON в блоке (скрытый)
-    const respEl = document.getElementById('create-resp');
-    respEl.textContent = JSON.stringify(data, null, 2);
-    respEl.className = 'response ' + (ok ? 'ok' : 'error'); // не show
-
-    if (ok && data.id) {
-      document.getElementById('create-id-value').textContent = data.id;
-      document.getElementById('create-id-banner').className = 'id-banner show';
-    } else {
-      document.getElementById('create-id-banner').className = 'id-banner';
-    }
-
-    const btn = document.getElementById('create-json-btn');
-    btn.style.display = 'block';
-    btn.textContent = 'показать JSON ▾';
   }
+  points = newPts;
+  closed = newPts.length >= 3;
+  redraw();
+}
 
-  // проверить точку
-  async function checkPoint() {
-    const x    = parseFloat(document.getElementById('pip-x').value);
-    const y    = parseFloat(document.getElementById('pip-y').value);
-    const algo = document.getElementById('pip-algo').value;
-    const inc  = document.getElementById('pip-boundary').checked;
+function toGeoJsonCoords(pts) {
+  const arr = pts.map(p => [p.x, p.y]);
+  return [[...arr, arr[0]]];
+}
 
-    if (isNaN(x) || isNaN(y)) return;
+// ── Утилиты ───────────────────────────────────────────────────────────────
+async function req(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  return { ok: r.ok, data: await r.json() };
+}
 
-    const { ok, data } = await req('POST', '/query/point-in-polygon',
-      { point: [x, y], algorithm: algo, include_boundary: inc });
+function showResp(id, data, ok) {
+  const el = document.getElementById(id);
+  el.textContent = JSON.stringify(data, null, 2);
+  el.className   = 'response show ' + (ok ? 'ok' : 'error');
+}
 
-    // сохраняем JSON скрытым
-    const respEl = document.getElementById('pip-resp');
-    respEl.textContent = JSON.stringify(data, null, 2);
-    respEl.className = 'response ' + (ok ? 'ok' : 'error');
+function toggleJson(respId, btnId) {
+  const el  = document.getElementById(respId);
+  const btn = document.getElementById(btnId);
+  const vis = el.classList.contains('show');
+  el.classList.toggle('show', !vis);
+  btn.textContent = vis ? 'показать JSON ▾' : 'скрыть JSON ▴';
+}
 
-    const btn = document.getElementById('pip-json-btn');
-    btn.style.display = 'block';
-    btn.textContent = 'показать JSON ▾';
+function copyId() {
+  navigator.clipboard.writeText(document.getElementById('create-id-value').textContent).catch(()=>{});
+  const btn = document.querySelector('.id-copy');
+  btn.textContent = 'скопировано!';
+  setTimeout(() => { btn.textContent = 'копировать'; }, 1500);
+}
 
-    // красивый результат
-    const resultEl  = document.getElementById('pip-result');
-    const iconEl    = document.getElementById('pip-icon');
-    const verdictEl = document.getElementById('pip-verdict');
-    const namesEl   = document.getElementById('pip-names');
+// ── Создать полигон ───────────────────────────────────────────────────────
+async function createPolygon() {
+  const name  = document.getElementById('create-name').value.trim();
+  const props = document.getElementById('create-props').value.trim();
 
-    if (!ok) {
-      resultEl.className = 'pip-result show miss';
-      iconEl.textContent = '✗';
-      verdictEl.textContent = data.error || 'Ошибка запроса';
-      namesEl.textContent = '';
-      return;
-    }
+  if (!name) return showResp('create-resp', { error: 'Введите название' }, false);
 
-    const hit = data.matching_count > 0;
-    resultEl.className = `pip-result show ${hit ? 'hit' : 'miss'}`;
-    iconEl.textContent = hit ? '✓' : '✗';
-    verdictEl.textContent = hit
-      ? `Точка (${x}, ${y}) попала в ${data.matching_count} полигон${data.matching_count > 1 ? 'а' : ''}`
-      : `Точка (${x}, ${y}) не попала ни в один полигон`;
-    namesEl.textContent = hit
-      ? data.matching_polygons.map(p => `· ${p.name}  [${p.id.slice(0,8)}...]`).join('\n')
-      : '';
+  const pts = getLogicalPoints();
+  if (pts.length < 3) return showResp('create-resp', { error: 'Нужно минимум 3 точки' }, false);
+
+  let properties = {};
+  if (props) { try { properties = JSON.parse(props); } catch { return showResp('create-resp', { error: 'Ошибка парсинга properties' }, false); } }
+
+  const { ok, data } = await req('POST', '/polygons', {
+    name, geometry: { type: 'Polygon', coordinates: toGeoJsonCoords(pts) }, properties
+  });
+
+  const respEl = document.getElementById('create-resp');
+  respEl.textContent = JSON.stringify(data, null, 2);
+  respEl.className   = 'response ' + (ok ? 'ok' : 'error');
+
+  if (ok && data.id) {
+    document.getElementById('create-id-value').textContent = data.id;
+    document.getElementById('create-id-banner').className  = 'id-banner show';
+  } else {
+    document.getElementById('create-id-banner').className = 'id-banner';
   }
+  const btn = document.getElementById('create-json-btn');
+  btn.style.display = 'block'; btn.textContent = 'показать JSON ▾';
+}
 
-  // получить удалить
-  async function getPolygon() {
-    const id = document.getElementById('byid-id').value.trim();
-    if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
-    const { ok, data } = await req('GET', `/polygons/${id}`);
-    showResp('byid-resp', data, ok);
+// ── Проверить точку ───────────────────────────────────────────────────────
+async function checkPoint() {
+  const x    = parseFloat(document.getElementById('pip-x').value);
+  const y    = parseFloat(document.getElementById('pip-y').value);
+  const algo = document.getElementById('pip-algo').value;
+  const inc  = document.getElementById('pip-boundary').checked;
+  if (isNaN(x) || isNaN(y)) return;
+
+  const { ok, data } = await req('POST', '/query/point-in-polygon',
+    { point: [x, y], algorithm: algo, include_boundary: inc });
+
+  const respEl = document.getElementById('pip-resp');
+  respEl.textContent = JSON.stringify(data, null, 2);
+  respEl.className   = 'response ' + (ok ? 'ok' : 'error');
+  const btn = document.getElementById('pip-json-btn');
+  btn.style.display = 'block'; btn.textContent = 'показать JSON ▾';
+
+  const resultEl  = document.getElementById('pip-result');
+  const verdictEl = document.getElementById('pip-verdict');
+  const namesEl   = document.getElementById('pip-names');
+
+  if (!ok) {
+    resultEl.className   = 'pip-result show miss';
+    verdictEl.textContent = data.error || 'Ошибка запроса';
+    namesEl.textContent   = '';
+    return;
   }
+  const hit = data.matching_count > 0;
+  resultEl.className    = `pip-result show ${hit ? 'hit' : 'miss'}`;
+  verdictEl.textContent = hit
+    ? `Точка (${x}, ${y}) попала в ${data.matching_count} полигон${data.matching_count > 1 ? 'а' : ''}`
+    : `Точка (${x}, ${y}) не попала ни в один полигон`;
+  namesEl.textContent = hit
+    ? data.matching_polygons.map(p => `· ${p.name}  [${p.id.slice(0,8)}...]`).join('\n')
+    : '';
+}
 
-  async function deletePolygon() {
-    const id = document.getElementById('byid-id').value.trim();
-    if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
-    const { ok, data } = await req('DELETE', `/polygons/${id}`);
-    showResp('byid-resp', data, ok);
-  }
+// ── Получить / удалить ────────────────────────────────────────────────────
+async function getPolygon() {
+  const id = document.getElementById('byid-id').value.trim();
+  if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
+  const { ok, data } = await req('GET', `/polygons/${id}`);
+  showResp('byid-resp', data, ok);
+}
+async function deletePolygon() {
+  const id = document.getElementById('byid-id').value.trim();
+  if (!id) return showResp('byid-resp', { error: 'Введите ID' }, false);
+  const { ok, data } = await req('DELETE', `/polygons/${id}`);
+  showResp('byid-resp', data, ok);
+}
 
-  // обновить
-  async function updatePolygon() {
-    const id   = document.getElementById('upd-id').value.trim();
-    const name = document.getElementById('upd-name').value.trim();
-    const raw  = document.getElementById('upd-pts').value.trim();
-    if (!id) return showResp('upd-resp', { error: 'Введите ID' }, false);
-
-    const body = {};
-    if (name) body.name = name;
-    if (raw) {
-      try { body.geometry = { type: 'Polygon', coordinates: toGeoJsonCoords(parsePoints(raw)) }; }
-      catch (e) { return showResp('upd-resp', { error: e.message }, false); }
-    }
-    if (!Object.keys(body).length) return showResp('upd-resp', { error: 'Нечего обновлять' }, false);
-    const { ok, data } = await req('PUT', `/polygons/${id}`, body);
-    showResp('upd-resp', data, ok);
-  }
+// ── Обновить ──────────────────────────────────────────────────────────────
+async function updatePolygon() {
+  const id   = document.getElementById('upd-id').value.trim();
+  const name = document.getElementById('upd-name').value.trim();
+  if (!id)   return showResp('upd-resp', { error: 'Введите ID' }, false);
+  const body = {};
+  if (name) body.name = name;
+  if (!Object.keys(body).length) return showResp('upd-resp', { error: 'Нечего обновлять' }, false);
+  const { ok, data } = await req('PUT', `/polygons/${id}`, body);
+  showResp('upd-resp', data, ok);
+}
 </script>
-
 </body>
 </html>
