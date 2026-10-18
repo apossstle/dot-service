@@ -1,8 +1,9 @@
 import math
 from .types import Point, Geometry
+from .spatial_index import SpatialIndex
 
 
-class BoundingBoxIndex:
+class BoundingBoxIndex(SpatialIndex):
 
     def __init__(self):
         self._bboxes: dict[str, tuple[float, float, float, float]] = {}

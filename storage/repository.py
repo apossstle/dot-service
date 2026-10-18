@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from geometry.types import Point, Polygon, MultiPolygon, Geometry
 from geometry.algorithms import geometry_contains, PointLocation
+from geometry.spatial_index import SpatialIndex
 from geometry.index import GridIndex
 
 
@@ -37,7 +38,7 @@ class PolygonRepository:
 
     def __init__(self, index_cell_size: float = 1.0):
         self._store: dict[str, PolygonRecord] = {}
-        self._index = GridIndex(cell_size=index_cell_size)
+        self._index: SpatialIndex = GridIndex(cell_size=index_cell_size)
 
     def create(
         self,
