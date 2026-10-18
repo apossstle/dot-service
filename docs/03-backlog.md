@@ -36,8 +36,8 @@
 
 | ID | Задача | Исп. | Прио | Ч | Готово |
 |---|---|---|---|---|---|
-| 1.1 | Абстрактный класс `SpatialIndex` с методами add/remove/update/candidates/stats | А | M | 2 | ☐ |
-| 1.2 | Привести существующие `BoundingBoxIndex` и `GridIndex` к интерфейсу | А | M | 2 | ☐ |
+| 1.1 | Абстрактный класс `SpatialIndex` с методами add/remove/update/candidates/stats | А | M | 2 | ☒ |
+| 1.2 | Привести существующие `BoundingBoxIndex` и `GridIndex` к интерфейсу | А | M | 2 | ☒ |
 | 1.3 | Реализовать `RTreeIndex` поверх библиотеки `rtree` | А | M | 6 | ☐ |
 | 1.4 | Параметр `--index=grid\|rtree` в main.py + env `INDEX_TYPE` | А | M | 2 | ☐ |
 | 1.5 | Передавать выбор индекса в `PolygonRepository` при инициализации | А | M | 2 | ☐ |
