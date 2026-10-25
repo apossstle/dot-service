@@ -341,6 +341,53 @@ class TestRTreeIndex(unittest.TestCase):
         self.assertEqual(stats["polygon_count"], 1)
 
 
+class TestIndexesAgree(unittest.TestCase):
+
+    def test_grid_and_rtree_return_same_candidates(self):
+        rng = random.Random(42)
+        grid = GridIndex(cell_size=10.0)
+        rtree = RTreeIndex()
+        for i in range(50):
+            x0 = rng.uniform(0, 90)
+            y0 = rng.uniform(0, 90)
+            poly = make_square(x0, y0, x0 + rng.uniform(1, 30), y0 + rng.uniform(1, 30))
+            grid.add(f"p{i}", poly)
+            rtree.add(f"p{i}", poly)
+
+        for _ in range(1000):
+            p = Point(rng.uniform(0, 120), rng.uniform(0, 120))
+            g = set(grid.candidates(p))
+            r = set(rtree.candidates(p))
+            if g != r:
+                self.fail(f"indexes disagree at ({p.x}, {p.y}): grid={sorted(g)} rtree={sorted(r)}")
+
+    def test_agree_after_remove_and_update(self):
+        rng = random.Random(7)
+        grid = GridIndex(cell_size=10.0)
+        rtree = RTreeIndex()
+        for i in range(30):
+            x0, y0 = rng.uniform(0, 90), rng.uniform(0, 90)
+            poly = make_square(x0, y0, x0 + 10, y0 + 10)
+            grid.add(f"p{i}", poly)
+            rtree.add(f"p{i}", poly)
+        for i in range(0, 30, 3):
+            grid.remove(f"p{i}")
+            rtree.remove(f"p{i}")
+        for i in range(1, 30, 3):
+            x0, y0 = rng.uniform(0, 90), rng.uniform(0, 90)
+            poly = make_square(x0, y0, x0 + 5, y0 + 5)
+            grid.update(f"p{i}", poly)
+            rtree.update(f"p{i}", poly)
+
+        self.assertEqual(grid.size(), rtree.size())
+        for _ in range(1000):
+            p = Point(rng.uniform(0, 100), rng.uniform(0, 100))
+            g = set(grid.candidates(p))
+            r = set(rtree.candidates(p))
+            if g != r:
+                self.fail(f"indexes disagree at ({p.x}, {p.y}): grid={sorted(g)} rtree={sorted(r)}")
+
+
 class TestMultiPolygon(unittest.TestCase):
 
     def setUp(self):
