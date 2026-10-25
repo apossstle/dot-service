@@ -3,6 +3,7 @@ import os
 import json
 import unittest
 import io
+import random
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from geometry.types import Point, Ring, Polygon, MultiPolygon, geometry_from_geojson
@@ -11,6 +12,7 @@ from geometry.algorithms import (
     geometry_contains, PointLocation, bbox_contains_point
 )
 from geometry.index import BoundingBoxIndex, GridIndex
+from geometry.rtree_index import RTreeIndex
 from geometry.wkt import parse_wkt, to_wkt
 from storage.repository import PolygonRepository
 from api import server as api_server
@@ -286,6 +288,57 @@ class TestGridIndex(unittest.TestCase):
         self.index.update("p1", new_poly)
         self.assertEqual(self.index.candidates(Point(2, 2)), [])
         self.assertIn("p1", self.index.candidates(Point(105, 105)))
+
+
+class TestRTreeIndex(unittest.TestCase):
+
+    def setUp(self):
+        self.index = RTreeIndex()
+        self.index.add("p1", make_square(0, 0, 4, 4))
+
+    def test_finds_polygon(self):
+        self.assertIn("p1", self.index.candidates(Point(2, 2)))
+
+    def test_no_false_positive(self):
+        self.assertEqual(self.index.candidates(Point(20, 20)), [])
+
+    def test_overlapping_polygons(self):
+        self.index.add("p2", make_square(2, 2, 6, 6))
+        self.assertEqual(set(self.index.candidates(Point(3, 3))), {"p1", "p2"})
+
+    def test_point_on_bbox_edge(self):
+        self.assertIn("p1", self.index.candidates(Point(4, 2)))
+        self.assertIn("p1", self.index.candidates(Point(0, 0)))
+
+    def test_remove_removes_from_index(self):
+        self.index.remove("p1")
+        self.assertEqual(self.index.candidates(Point(2, 2)), [])
+
+    def test_remove_nonexistent_is_safe(self):
+        self.index.remove("missing")
+        self.assertEqual(self.index.size(), 1)
+
+    def test_update_moves_polygon(self):
+        self.index.update("p1", make_square(100, 100, 110, 110))
+        self.assertEqual(self.index.candidates(Point(2, 2)), [])
+        self.assertIn("p1", self.index.candidates(Point(105, 105)))
+        self.assertEqual(self.index.size(), 1)
+
+    def test_readd_after_remove(self):
+        self.index.remove("p1")
+        self.index.add("p1", make_square(10, 10, 12, 12))
+        self.assertEqual(self.index.candidates(Point(11, 11)), ["p1"])
+        self.assertEqual(self.index.candidates(Point(2, 2)), [])
+
+    def test_size_reflects_count(self):
+        self.index.add("p2", make_square(10, 10, 12, 12))
+        self.index.add("p3", make_square(20, 20, 22, 22))
+        self.assertEqual(self.index.size(), 3)
+
+    def test_stats_type(self):
+        stats = self.index.stats()
+        self.assertEqual(stats["type"], "RTreeIndex")
+        self.assertEqual(stats["polygon_count"], 1)
 
 
 class TestMultiPolygon(unittest.TestCase):
