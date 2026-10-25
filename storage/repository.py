@@ -6,10 +6,19 @@ from geometry.types import Point, Polygon, MultiPolygon, Geometry
 from geometry.algorithms import geometry_contains, PointLocation
 from geometry.spatial_index import SpatialIndex
 from geometry.index import GridIndex
+from geometry.rtree_index import RTreeIndex
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _build_index(index_type: str, cell_size: float) -> SpatialIndex:
+    if index_type == "rtree":
+        return RTreeIndex()
+    if index_type == "grid":
+        return GridIndex(cell_size=cell_size)
+    raise ValueError(f"Неизвестный тип индекса: '{index_type}'. Доступны: 'grid', 'rtree'")
 
 
 @dataclass
@@ -36,9 +45,9 @@ class PolygonRecord:
 
 class PolygonRepository:
 
-    def __init__(self, index_cell_size: float = 1.0):
+    def __init__(self, index_type: str = "grid", index_cell_size: float = 1.0):
         self._store: dict[str, PolygonRecord] = {}
-        self._index: SpatialIndex = GridIndex(cell_size=index_cell_size)
+        self._index: SpatialIndex = _build_index(index_type, index_cell_size)
 
     def create(
         self,

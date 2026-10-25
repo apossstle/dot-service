@@ -20,9 +20,9 @@ CORS_HEADERS = "Content-Type, X-User-Id"
 USER_COOKIE = "ps_uid"
 
 
-def configure_repository(cell_size: float = 1.0) -> PolygonRepository:
+def configure_repository(index_type: str = "grid", cell_size: float = 1.0) -> PolygonRepository:
     global _repository
-    _repository = PolygonRepository(index_cell_size=cell_size)
+    _repository = PolygonRepository(index_type=index_type, index_cell_size=cell_size)
     return _repository
 
 
@@ -32,8 +32,8 @@ def get_repository() -> PolygonRepository:
     return _repository
 
 
-def reset_repository(cell_size: float = 1.0) -> PolygonRepository:
-    return configure_repository(cell_size)  # alias for tests
+def reset_repository(cell_size: float = 1.0, index_type: str = "grid") -> PolygonRepository:
+    return configure_repository(index_type=index_type, cell_size=cell_size)  # alias for tests
 
 
 def _send_cors(handler: BaseHTTPRequestHandler) -> None:
