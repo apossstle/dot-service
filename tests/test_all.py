@@ -740,6 +740,11 @@ class TestOperations(unittest.TestCase):
         result = ops.union([bowtie, make_square(10, 10, 11, 11)])
         self.assertAlmostEqual(area(result), 3.0)
 
+    def test_overlapping_multipolygon_parts_keep_area(self):
+        mp = MultiPolygon(polygons=[make_square(0, 0, 2, 2), make_square(1, 1, 3, 3)])
+        self.assertAlmostEqual(area(ops.union([mp, make_square(10, 10, 11, 11)])), 8.0)
+        self.assertAlmostEqual(area(ops.intersection([mp, make_square(0, 0, 3, 3)])), 7.0)
+
     def test_shapely_roundtrip(self):
         original = make_square_with_hole()
         restored = ops.from_shapely(ops.to_shapely(original))

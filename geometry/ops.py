@@ -76,7 +76,7 @@ def _prepare(geometry: Geometry):
     shp = to_shapely(geometry)
     if shp.is_valid:
         return shp
-    parts = _polygonal_parts(shapely.make_valid(shp))
+    parts = _polygonal_parts(shapely.make_valid(shp, method="structure"))
     return ShpMultiPolygon(parts) if parts else ShpPolygon()
 
 
