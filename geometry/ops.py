@@ -37,7 +37,7 @@ def intersection(geometries: list[Geometry]) -> Geometry | None:
 
 
 def difference(base: Geometry, others: list[Geometry]) -> Geometry | None:
-    _require_count(others, 1, "difference")
+    _require_count([base, *others], 2, "difference")
     subtrahend = shapely.union_all([_prepare(g) for g in others])
     return from_shapely(shapely.difference(_prepare(base), subtrahend))
 

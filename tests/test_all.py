@@ -1016,7 +1016,7 @@ class TestAPI(unittest.TestCase):
         ids = self._ids((0, 0, 1, 1))
         status, body = self._operation("difference", {"polygon_ids": ids})
         self.assertEqual(status, 400)
-        self.assertIn("error", body)
+        self.assertIn("минимум 2", body["error"])
 
     def test_operation_buffer(self):
         ids = self._ids((0, 0, 2, 2))
