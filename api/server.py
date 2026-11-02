@@ -1,8 +1,9 @@
 import json
 import os
+import threading
 import traceback
 import uuid
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from http.cookies import SimpleCookie
 from urllib.parse import urlparse
 
@@ -13,6 +14,7 @@ from storage.repository import PolygonRepository
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 OPERATIONS = ("union", "intersection", "difference", "buffer")
+_dispatch_lock = threading.Lock()
 
 _repository: PolygonRepository | None = None
 
@@ -340,7 +342,8 @@ class PolygonServiceHandler(BaseHTTPRequestHandler):
 
     def _handle(self) -> None:
         try:
-            self._dispatch()
+            with _dispatch_lock:
+                self._dispatch()
         except ValueError as e:
             _json(self, 400, {"error": str(e)})
         except Exception:
@@ -360,7 +363,7 @@ def run_server(
         _repository = repository
     elif _repository is None:
         configure_repository()
-    server = HTTPServer((host, port), PolygonServiceHandler)
+    server = ThreadingHTTPServer((host, port), PolygonServiceHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
