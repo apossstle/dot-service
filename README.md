@@ -7,6 +7,7 @@ REST API и веб-карта на OpenStreetMap: полигоны рисуют�
 - Два алгоритма point-in-polygon: ray casting и winding number
 - Три состояния точки: внутри, снаружи, на границе
 - Два пространственных индекса: равномерная сетка и R-Tree
+- Объединение, пересечение, разность и буфер полигонов
 - У каждого пользователя свой набор полигонов
 
 ## Запуск
@@ -14,7 +15,7 @@ REST API и веб-карта на OpenStreetMap: полигоны рисуют�
 Нужен Python 3.10+.
 
 ```bash
-pip install rtree
+pip install rtree shapely
 python main.py
 ```
 
@@ -53,6 +54,7 @@ python tests/test_all.py
 | `POST` | `/polygons` | создать |
 | `GET` `PUT` `DELETE` | `/polygons/{id}` | получить, изменить, удалить |
 | `POST` | `/query/point-in-polygon` | найти полигоны, содержащие точку |
+| `POST` | `/operations/{union,intersection,difference,buffer}` | операция над полигонами |
 
 Ошибки приходят как `{"error": "..."}` с кодом `400`, `404` или `500`.
 
@@ -102,6 +104,25 @@ Content-Type: application/json
 
 В ответе — все полигоны, которые содержат точку.
 
+### Операции над полигонами
+
+```http
+POST /operations/intersection
+X-User-Id: demo
+Content-Type: application/json
+
+{"polygon_ids": ["<id-1>", "<id-2>"]}
+```
+
+| Операция | `polygon_ids` | |
+|---|---|---|
+| `union` | 2 и больше | объединение |
+| `intersection` | 2 и больше | пересечение |
+| `difference` | 2 и больше | из первого вычитаются остальные |
+| `buffer` | ровно 1, плюс поле `distance` | расширение (`distance > 0`) или сжатие (`< 0`) в единицах координат |
+
+Ответ — `geometry` в GeoJSON и `wkt`. Если результат пустой (например, полигоны не пересекаются), оба поля равны `null`, код `200`. Невалидная входная геометрия, например самопересекающийся контур, перед операцией исправляется.
+
 ## Как это работает
 
 **Ray casting** — из точки проводится луч вправо и считаются пересечения с рёбрами: нечётное число — внутри.
@@ -139,6 +160,7 @@ python benchmarks/bench_moscow.py --cell-size 0.05
 geometry/
   types.py           Point, Ring, Polygon, MultiPolygon
   algorithms.py      ray casting, winding number
+  ops.py             операции над полигонами через shapely
   wkt.py             парсер и сериализатор WKT
   spatial_index.py   интерфейс индекса
   index.py           GridIndex

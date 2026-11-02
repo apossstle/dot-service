@@ -6,11 +6,13 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from http.cookies import SimpleCookie
 from urllib.parse import urlparse
 
+from geometry import ops
 from geometry.types import Point, geometry_from_geojson
 from geometry.wkt import parse_wkt, to_wkt
 from storage.repository import PolygonRepository
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
+OPERATIONS = ("union", "intersection", "difference", "buffer")
 
 _repository: PolygonRepository | None = None
 
@@ -263,6 +265,40 @@ def handle_pip(handler: BaseHTTPRequestHandler) -> None:
     })
 
 
+def handle_operation(handler: BaseHTTPRequestHandler, operation: str) -> None:
+    user_id = _get_user_id(handler)
+    body = _read_body(handler)
+    ids = body.get("polygon_ids")
+    if not isinstance(ids, list) or not ids or not all(isinstance(pid, str) for pid in ids):
+        raise ValueError("Поле 'polygon_ids' обязательно: список id полигонов")
+
+    geometries = []
+    for pid in ids:
+        record = get_repository().get(pid)
+        if record is None or record.owner_id != user_id:
+            _json(handler, 404, {"error": f"Полигон '{pid}' не найден"})
+            return
+        geometries.append(record.geometry)
+
+    if operation == "union":
+        result = ops.union(geometries)
+    elif operation == "intersection":
+        result = ops.intersection(geometries)
+    elif operation == "difference":
+        result = ops.difference(geometries[0], geometries[1:])
+    else:
+        if len(geometries) != 1:
+            raise ValueError("Для buffer нужен ровно один полигон")
+        result = ops.buffer(geometries[0], body.get("distance"))
+
+    _json(handler, 200, {
+        "operation": operation,
+        "polygon_ids": ids,
+        "geometry": result.to_geojson() if result else None,
+        "wkt": to_wkt(result) if result else None,
+    })
+
+
 class PolygonServiceHandler(BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
@@ -282,6 +318,10 @@ class PolygonServiceHandler(BaseHTTPRequestHandler):
             return handle_stats(self)
         if method == "POST" and path == "/query/point-in-polygon":
             return handle_pip(self)
+        if method == "POST" and path.startswith("/operations/"):
+            operation = path[len("/operations/"):]
+            if operation in OPERATIONS:
+                return handle_operation(self, operation)
 
         resource, rid = _parse_path(path)
         if resource == "polygons":
