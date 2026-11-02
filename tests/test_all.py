@@ -961,6 +961,132 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(status, 404)
         self.assertIn("error", body)
 
+    def _ids(self, *squares, user_id="test-user"):
+        return [self._create_polygon(f"p{i}", *sq, user_id=user_id)[1]["id"] for i, sq in enumerate(squares)]
+
+    def _operation(self, name, body, user_id="test-user"):
+        return self._call("POST", f"/operations/{name}", body, user_id=user_id)
+
+    def test_operation_union(self):
+        ids = self._ids((0, 0, 2, 2), (1, 1, 3, 3))
+        status, body = self._operation("union", {"polygon_ids": ids})
+        self.assertEqual(status, 200)
+        self.assertEqual(body["operation"], "union")
+        self.assertEqual(body["polygon_ids"], ids)
+        self.assertEqual(body["geometry"]["type"], "Polygon")
+        self.assertTrue(body["wkt"].startswith("POLYGON"))
+        self.assertAlmostEqual(area(geometry_from_geojson(body["geometry"])), 7.0)
+
+    def test_operation_union_disjoint_is_multipolygon(self):
+        ids = self._ids((0, 0, 1, 1), (5, 5, 6, 6))
+        status, body = self._operation("union", {"polygon_ids": ids})
+        self.assertEqual(status, 200)
+        self.assertEqual(body["geometry"]["type"], "MultiPolygon")
+        self.assertTrue(body["wkt"].startswith("MULTIPOLYGON"))
+
+    def test_operation_intersection(self):
+        ids = self._ids((0, 0, 2, 2), (1, 1, 3, 3))
+        status, body = self._operation("intersection", {"polygon_ids": ids})
+        self.assertEqual(status, 200)
+        self.assertAlmostEqual(area(geometry_from_geojson(body["geometry"])), 1.0)
+
+    def test_operation_intersection_empty_result(self):
+        ids = self._ids((0, 0, 1, 1), (5, 5, 6, 6))
+        status, body = self._operation("intersection", {"polygon_ids": ids})
+        self.assertEqual(status, 200)
+        self.assertIsNone(body["geometry"])
+        self.assertIsNone(body["wkt"])
+
+    def test_operation_difference_uses_first_as_base(self):
+        ids = self._ids((0, 0, 4, 4), (1, 1, 3, 3))
+        status, body = self._operation("difference", {"polygon_ids": ids})
+        self.assertEqual(status, 200)
+        result = geometry_from_geojson(body["geometry"])
+        self.assertEqual(len(result.holes), 1)
+        self.assertAlmostEqual(area(result), 12.0)
+        _, reverse = self._operation("difference", {"polygon_ids": ids[::-1]})
+        self.assertIsNone(reverse["geometry"])
+
+    def test_operation_difference_needs_two(self):
+        ids = self._ids((0, 0, 1, 1))
+        status, body = self._operation("difference", {"polygon_ids": ids})
+        self.assertEqual(status, 400)
+        self.assertIn("error", body)
+
+    def test_operation_buffer(self):
+        ids = self._ids((0, 0, 2, 2))
+        status, body = self._operation("buffer", {"polygon_ids": ids, "distance": 1})
+        self.assertEqual(status, 200)
+        result = geometry_from_geojson(body["geometry"])
+        self.assertEqual(result.bounding_box(), (-1, -1, 3, 3))
+
+    def test_operation_buffer_negative_collapse(self):
+        ids = self._ids((0, 0, 1, 1))
+        status, body = self._operation("buffer", {"polygon_ids": ids, "distance": -5})
+        self.assertEqual(status, 200)
+        self.assertIsNone(body["geometry"])
+
+    def test_operation_buffer_requires_one_polygon(self):
+        ids = self._ids((0, 0, 1, 1), (2, 2, 3, 3))
+        status, _ = self._operation("buffer", {"polygon_ids": ids, "distance": 1})
+        self.assertEqual(status, 400)
+
+    def test_operation_buffer_bad_distance(self):
+        ids = self._ids((0, 0, 1, 1))
+        for bad in (None, "1", True):
+            with self.subTest(distance=bad):
+                body = {"polygon_ids": ids}
+                if bad is not None:
+                    body["distance"] = bad
+                status, _ = self._operation("buffer", body)
+                self.assertEqual(status, 400)
+
+    def test_operation_union_needs_two(self):
+        ids = self._ids((0, 0, 1, 1))
+        status, _ = self._operation("union", {"polygon_ids": ids})
+        self.assertEqual(status, 400)
+
+    def test_operation_bad_polygon_ids(self):
+        for bad in ({}, {"polygon_ids": []}, {"polygon_ids": "abc"}, {"polygon_ids": [1, 2]}):
+            with self.subTest(body=bad):
+                status, body = self._operation("union", bad)
+                self.assertEqual(status, 400)
+                self.assertIn("polygon_ids", body["error"])
+
+    def test_operation_unknown_polygon(self):
+        ids = self._ids((0, 0, 1, 1))
+        status, body = self._operation("union", {"polygon_ids": ids + ["no-such-id"]})
+        self.assertEqual(status, 404)
+        self.assertIn("no-such-id", body["error"])
+
+    def test_operation_other_users_polygon(self):
+        mine = self._ids((0, 0, 2, 2))
+        foreign = self._ids((1, 1, 3, 3), user_id="developer")
+        status, _ = self._operation("intersection", {"polygon_ids": mine + foreign})
+        self.assertEqual(status, 404)
+
+    def test_operation_unknown_name(self):
+        ids = self._ids((0, 0, 1, 1), (1, 1, 2, 2))
+        status, _ = self._operation("xor", {"polygon_ids": ids})
+        self.assertEqual(status, 404)
+
+    def test_operation_get_not_allowed(self):
+        status, _ = self._call("GET", "/operations/union")
+        self.assertEqual(status, 404)
+
+    def test_operation_requires_user_id(self):
+        status, body = self._operation("union", {"polygon_ids": ["a", "b"]}, user_id="")
+        self.assertEqual(status, 400)
+        self.assertIn("X-User-Id", body["error"])
+
+    def test_operation_does_not_change_stored_polygons(self):
+        ids = self._ids((0, 0, 2, 2), (1, 1, 3, 3))
+        self._operation("union", {"polygon_ids": ids})
+        status, body = self._call("GET", "/polygons")
+        self.assertEqual(body["count"], 2)
+        _, first = self._call("GET", f"/polygons/{ids[0]}")
+        self.assertAlmostEqual(area(geometry_from_geojson(first["geometry"])), 4.0)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
