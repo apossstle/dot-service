@@ -14,6 +14,7 @@ from geometry.algorithms import (
 from geometry.index import BoundingBoxIndex, GridIndex
 from geometry.rtree_index import RTreeIndex
 from geometry.wkt import parse_wkt, to_wkt
+from geometry import ops
 from storage.repository import PolygonRepository
 from api import server as api_server
 from api.server import PolygonServiceHandler, reset_repository
@@ -570,6 +571,189 @@ class TestRepository(unittest.TestCase):
         stats = self.repo.index_stats()
         self.assertIn("polygon_count", stats)
         self.assertEqual(stats["polygon_count"], 1)
+
+
+def area(geometry) -> float:
+    return ops.to_shapely(geometry).area
+
+
+class TestOperations(unittest.TestCase):
+
+    def test_union_overlapping(self):
+        result = ops.union([make_square(0, 0, 2, 2), make_square(1, 1, 3, 3)])
+        self.assertIsInstance(result, Polygon)
+        self.assertAlmostEqual(area(result), 7.0)
+
+    def test_union_disjoint_gives_multipolygon(self):
+        result = ops.union([make_square(0, 0, 1, 1), make_square(5, 5, 6, 6)])
+        self.assertIsInstance(result, MultiPolygon)
+        self.assertEqual(len(result.polygons), 2)
+        self.assertAlmostEqual(area(result), 2.0)
+
+    def test_union_touching_edge_merges(self):
+        result = ops.union([make_square(0, 0, 1, 1), make_square(1, 0, 2, 1)])
+        self.assertIsInstance(result, Polygon)
+        self.assertAlmostEqual(area(result), 2.0)
+
+    def test_union_nested_returns_outer(self):
+        result = ops.union([make_square(0, 0, 4, 4), make_square(1, 1, 2, 2)])
+        self.assertAlmostEqual(area(result), 16.0)
+        self.assertEqual(result.bounding_box(), (0, 0, 4, 4))
+
+    def test_union_three_polygons(self):
+        result = ops.union([make_square(0, 0, 1, 1), make_square(1, 0, 2, 1), make_square(2, 0, 3, 1)])
+        self.assertIsInstance(result, Polygon)
+        self.assertAlmostEqual(area(result), 3.0)
+
+    def test_intersection_overlapping(self):
+        result = ops.intersection([make_square(0, 0, 2, 2), make_square(1, 1, 3, 3)])
+        self.assertIsInstance(result, Polygon)
+        self.assertAlmostEqual(area(result), 1.0)
+        self.assertEqual(result.bounding_box(), (1, 1, 2, 2))
+
+    def test_intersection_disjoint_is_none(self):
+        self.assertIsNone(ops.intersection([make_square(0, 0, 1, 1), make_square(5, 5, 6, 6)]))
+
+    def test_intersection_touching_edge_is_none(self):
+        self.assertIsNone(ops.intersection([make_square(0, 0, 1, 1), make_square(1, 0, 2, 1)]))
+
+    def test_intersection_touching_corner_is_none(self):
+        self.assertIsNone(ops.intersection([make_square(0, 0, 1, 1), make_square(1, 1, 2, 2)]))
+
+    def test_intersection_nested_returns_inner(self):
+        result = ops.intersection([make_square(0, 0, 4, 4), make_square(1, 1, 2, 2)])
+        self.assertAlmostEqual(area(result), 1.0)
+        self.assertEqual(result.bounding_box(), (1, 1, 2, 2))
+
+    def test_intersection_three_polygons(self):
+        result = ops.intersection([make_square(0, 0, 2, 2), make_square(1, 1, 3, 3), make_square(1.5, 0, 2.5, 3)])
+        self.assertAlmostEqual(area(result), 0.5)
+
+    def test_difference_overlapping(self):
+        result = ops.difference(make_square(0, 0, 2, 2), [make_square(1, 1, 3, 3)])
+        self.assertAlmostEqual(area(result), 3.0)
+
+    def test_difference_disjoint_keeps_base(self):
+        result = ops.difference(make_square(0, 0, 2, 2), [make_square(5, 5, 6, 6)])
+        self.assertAlmostEqual(area(result), 4.0)
+
+    def test_difference_nested_creates_hole(self):
+        result = ops.difference(make_square(0, 0, 4, 4), [make_square(1, 1, 3, 3)])
+        self.assertIsInstance(result, Polygon)
+        self.assertEqual(len(result.holes), 1)
+        self.assertAlmostEqual(area(result), 12.0)
+
+    def test_difference_fully_covered_is_none(self):
+        self.assertIsNone(ops.difference(make_square(1, 1, 2, 2), [make_square(0, 0, 4, 4)]))
+
+    def test_difference_splits_into_multipolygon(self):
+        result = ops.difference(make_square(0, 0, 3, 1), [make_square(1, -1, 2, 2)])
+        self.assertIsInstance(result, MultiPolygon)
+        self.assertAlmostEqual(area(result), 2.0)
+
+    def test_difference_several_subtrahends(self):
+        result = ops.difference(make_square(0, 0, 4, 1), [make_square(0, 0, 1, 1), make_square(3, 0, 4, 1)])
+        self.assertAlmostEqual(area(result), 2.0)
+        self.assertEqual(result.bounding_box(), (1, 0, 3, 1))
+
+    def test_buffer_positive_grows(self):
+        result = ops.buffer(make_square(0, 0, 2, 2), 1)
+        self.assertGreater(area(result), 4.0)
+        self.assertEqual(result.bounding_box(), (-1, -1, 3, 3))
+
+    def test_buffer_negative_shrinks(self):
+        result = ops.buffer(make_square(0, 0, 4, 4), -1)
+        self.assertAlmostEqual(area(result), 4.0)
+
+    def test_buffer_negative_collapse_is_none(self):
+        self.assertIsNone(ops.buffer(make_square(0, 0, 1, 1), -1))
+
+    def test_buffer_zero_keeps_area(self):
+        self.assertAlmostEqual(area(ops.buffer(make_square(0, 0, 2, 2), 0)), 4.0)
+
+    def test_buffer_rejects_bad_distance(self):
+        for bad in (None, "1", True, float("nan"), float("inf")):
+            with self.subTest(distance=bad):
+                with self.assertRaises(ValueError):
+                    ops.buffer(make_square(), bad)
+
+    def test_union_requires_two(self):
+        with self.assertRaises(ValueError):
+            ops.union([make_square()])
+
+    def test_intersection_requires_two(self):
+        with self.assertRaises(ValueError):
+            ops.intersection([make_square()])
+
+    def test_difference_requires_subtrahend(self):
+        with self.assertRaises(ValueError):
+            ops.difference(make_square(), [])
+
+    def test_union_with_hole_fills_it(self):
+        result = ops.union([make_square_with_hole(), make_square(1, 1, 3, 3)])
+        self.assertIsInstance(result, Polygon)
+        self.assertEqual(result.holes, [])
+        self.assertAlmostEqual(area(result), 16.0)
+
+    def test_intersection_inside_hole_is_none(self):
+        self.assertIsNone(ops.intersection([make_square_with_hole(), make_square(1.5, 1.5, 2.5, 2.5)]))
+
+    def test_intersection_across_hole_keeps_hole(self):
+        result = ops.intersection([make_square_with_hole(), make_square(0, 0, 4, 4)])
+        self.assertEqual(len(result.holes), 1)
+        self.assertAlmostEqual(area(result), 12.0)
+
+    def test_difference_of_hole_area_unchanged(self):
+        result = ops.difference(make_square_with_hole(), [make_square(1.5, 1.5, 2.5, 2.5)])
+        self.assertAlmostEqual(area(result), 12.0)
+
+    def test_buffer_closes_small_hole(self):
+        result = ops.buffer(make_square_with_hole(), 1)
+        self.assertEqual(result.holes, [])
+
+    def test_union_multipolygon_with_polygon(self):
+        mp = MultiPolygon(polygons=[make_square(0, 0, 1, 1), make_square(5, 5, 6, 6)])
+        result = ops.union([mp, make_square(1, 0, 5, 1)])
+        self.assertIsInstance(result, MultiPolygon)
+        self.assertAlmostEqual(area(result), 6.0)
+
+    def test_union_bridges_multipolygon_parts(self):
+        mp = MultiPolygon(polygons=[make_square(0, 0, 1, 1), make_square(2, 0, 3, 1)])
+        result = ops.union([mp, make_square(1, 0, 2, 1)])
+        self.assertIsInstance(result, Polygon)
+        self.assertAlmostEqual(area(result), 3.0)
+
+    def test_intersection_picks_one_part_of_multipolygon(self):
+        mp = MultiPolygon(polygons=[make_square(0, 0, 1, 1), make_square(5, 5, 6, 6)])
+        result = ops.intersection([mp, make_square(4, 4, 7, 7)])
+        self.assertIsInstance(result, Polygon)
+        self.assertEqual(result.bounding_box(), (5, 5, 6, 6))
+
+    def test_difference_removes_multipolygon_part(self):
+        mp = MultiPolygon(polygons=[make_square(0, 0, 1, 1), make_square(5, 5, 6, 6)])
+        result = ops.difference(mp, [make_square(4, 4, 7, 7)])
+        self.assertIsInstance(result, Polygon)
+        self.assertEqual(result.bounding_box(), (0, 0, 1, 1))
+
+    def test_invalid_bowtie_is_repaired(self):
+        bowtie = Polygon(exterior=Ring.from_coords([[0, 0], [2, 2], [2, 0], [0, 2]]))
+        result = ops.union([bowtie, make_square(10, 10, 11, 11)])
+        self.assertAlmostEqual(area(result), 3.0)
+
+    def test_shapely_roundtrip(self):
+        original = make_square_with_hole()
+        restored = ops.from_shapely(ops.to_shapely(original))
+        self.assertEqual(restored.bounding_box(), original.bounding_box())
+        self.assertEqual(len(restored.holes), 1)
+        self.assertAlmostEqual(area(restored), 12.0)
+
+    def test_from_shapely_empty_is_none(self):
+        from shapely.geometry import Polygon as ShpPolygon
+        self.assertIsNone(ops.from_shapely(ShpPolygon()))
+
+    def test_to_shapely_rejects_unknown_type(self):
+        with self.assertRaises(TypeError):
+            ops.to_shapely(Point(0, 0))
 
 
 class _MockHandler:
