@@ -135,7 +135,7 @@
 
     .mode-tabs {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(4, 1fr);
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -423,6 +423,17 @@
       transition: color .15s ease;
     }
     .poly-item .x:hover { color: var(--danger); }
+    .poly-item.selected {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, .08);
+    }
+    .poly-item .order {
+      min-width: 14px;
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #a5a8f6;
+    }
 
     .empty {
       padding: 24px 12px;
@@ -617,6 +628,7 @@
     <div class="mode-tabs">
       <button id="tab-draw" class="active" onclick="setMode('draw')">Рисовать</button>
       <button id="tab-query" onclick="setMode('query')">Точка</button>
+      <button id="tab-ops" onclick="setMode('ops')">Операции</button>
       <button id="tab-edit" onclick="setMode('edit')">Список</button>
     </div>
 
@@ -688,6 +700,40 @@
       </div>
       <button class="json-toggle" onclick="toggleJson('pip-json', this)">показать ответ сервера</button>
       <div class="json-view" id="pip-json"></div>
+    </div>
+
+    <div id="panel-ops" class="section" style="display: none;">
+      <h3>Операции</h3>
+      <div class="status-pill active" id="ops-status">Выбери полигоны на карте или в списке</div>
+
+      <label>Операция</label>
+      <select id="op-type" onchange="onOpTypeChange()">
+        <option value="union">Объединение</option>
+        <option value="intersection">Пересечение</option>
+        <option value="difference">Разность</option>
+        <option value="buffer">Буфер</option>
+      </select>
+      <div class="hint" id="op-hint"></div>
+
+      <div id="op-distance-row" style="display: none;">
+        <label>Расстояние, градусы</label>
+        <input id="op-distance" type="number" step="any" value="0.005">
+      </div>
+
+      <label>Полигоны</label>
+      <div class="poly-list" id="ops-list"></div>
+
+      <div class="row">
+        <button class="btn btn-primary" onclick="runOperation()">Выполнить</button>
+        <button class="btn btn-ghost" onclick="clearOpSelection()">Сбросить</button>
+      </div>
+
+      <div id="op-result" class="result-card">
+        <div class="verdict" id="op-verdict"></div>
+      </div>
+      <button class="btn btn-ghost" id="op-save" style="display: none;" onclick="saveOpResult()">Сохранить как полигон</button>
+      <button class="json-toggle" onclick="toggleJson('op-json', this)">показать ответ сервера</button>
+      <div class="json-view" id="op-json"></div>
     </div>
 
     <div id="panel-edit" class="section" style="display: none;">
@@ -877,11 +923,13 @@ function escapeHtml(s) {
 
 function setMode(m) {
   mode = m;
-  for (const id of ['draw', 'query', 'edit']) {
+  for (const id of ['draw', 'query', 'ops', 'edit']) {
     document.getElementById('tab-' + id).classList.toggle('active', m === id);
     document.getElementById('panel-' + id).style.display = m === id ? 'block' : 'none';
   }
   if (m !== 'draw') clearDraft();
+  if (m === 'ops') renderOpsList();
+  else clearOpSelection();
   map.closePopup();
 }
 
@@ -1072,6 +1120,8 @@ function addPolygonLayer(record) {
       queryAt(e.latlng);
     } else if (mode === 'draw' && inputFormat === 'map') {
       addVertex(e.latlng);
+    } else if (mode === 'ops') {
+      toggleOpSelection(record.id);
     } else {
       const rec = polyById[record.id] || record;
       const popup = L.popup({ closeButton: true, autoClose: true })
@@ -1126,6 +1176,7 @@ async function reloadPolygons() {
 
 function refreshList() {
   document.getElementById('poly-count').textContent = Object.keys(polyById).length;
+  renderOpsList();
   const list = document.getElementById('poly-list');
   const ids = Object.keys(polyById);
   if (ids.length === 0) {
@@ -1233,6 +1284,172 @@ function toggleJson(id, btn) {
   const open = el.classList.toggle('show');
   btn.textContent = open ? 'скрыть ответ' : 'показать ответ сервера';
 }
+
+const OP_LABELS = {
+  union: 'Объединение',
+  intersection: 'Пересечение',
+  difference: 'Разность',
+  buffer: 'Буфер',
+};
+const OP_HINTS = {
+  union: 'Объединяет все выбранные полигоны.',
+  intersection: 'Оставляет общую часть всех выбранных.',
+  difference: 'Из первого выбранного вычитаются остальные.',
+  buffer: 'Расширяет один полигон на заданное расстояние, отрицательное — сжимает.',
+};
+let opSelection = [];
+let opResult = null;
+let opResultLayer = null;
+
+function onOpTypeChange() {
+  const op = document.getElementById('op-type').value;
+  document.getElementById('op-hint').textContent = OP_HINTS[op];
+  document.getElementById('op-distance-row').style.display = op === 'buffer' ? 'block' : 'none';
+  clearOpResult();
+}
+
+function applyLayerStyle(id) {
+  const layer = polyLayers[id];
+  if (!layer) return;
+  const selected = opSelection.includes(id);
+  layer.setStyle({ weight: selected ? 4 : 2, fillOpacity: selected ? 0.4 : 0.18 });
+}
+
+function toggleOpSelection(id) {
+  const i = opSelection.indexOf(id);
+  if (i >= 0) opSelection.splice(i, 1);
+  else opSelection.push(id);
+  applyLayerStyle(id);
+  clearOpResult();
+  renderOpsList();
+}
+
+function clearOpSelection() {
+  const ids = opSelection;
+  opSelection = [];
+  ids.forEach(applyLayerStyle);
+  clearOpResult();
+  renderOpsList();
+}
+
+function clearOpResult() {
+  if (opResultLayer) { map.removeLayer(opResultLayer); opResultLayer = null; }
+  opResult = null;
+  document.getElementById('op-result').className = 'result-card';
+  document.getElementById('op-save').style.display = 'none';
+  document.getElementById('op-json').textContent = '';
+}
+
+function renderOpsList() {
+  opSelection = opSelection.filter(id => polyById[id]);
+  const n = opSelection.length;
+  document.getElementById('ops-status').textContent = n
+    ? `Выбрано: ${n}`
+    : 'Выбери полигоны на карте или в списке';
+
+  const list = document.getElementById('ops-list');
+  const ids = Object.keys(polyById);
+  if (ids.length === 0) {
+    list.innerHTML = '<div class="empty">Полигонов пока нет</div>';
+    return;
+  }
+  list.innerHTML = '';
+  ids.forEach(id => {
+    const order = opSelection.indexOf(id);
+    const el = document.createElement('div');
+    el.className = order >= 0 ? 'poly-item selected' : 'poly-item';
+    el.onclick = () => toggleOpSelection(id);
+    el.innerHTML = `
+      <span class="swatch" style="background: ${colorFor(id)};"></span>
+      <span class="name">${escapeHtml(polyById[id].name)}</span>
+      <span class="order">${order >= 0 ? order + 1 : ''}</span>
+    `;
+    list.appendChild(el);
+  });
+}
+
+async function runOperation() {
+  const op = document.getElementById('op-type').value;
+  if (op === 'buffer' && opSelection.length !== 1) {
+    showToast('Для буфера выбери ровно один полигон');
+    return;
+  }
+  if (op !== 'buffer' && opSelection.length < 2) {
+    showToast('Выбери минимум два полигона');
+    return;
+  }
+  const body = { polygon_ids: opSelection };
+  if (op === 'buffer') {
+    const distance = parseFloat(document.getElementById('op-distance').value);
+    if (!Number.isFinite(distance)) {
+      showToast('Укажи расстояние');
+      return;
+    }
+    body.distance = distance;
+  }
+
+  const r = await apiFetch(`/operations/${op}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    showToast(data.error || 'Ошибка');
+    return;
+  }
+  showOpResult(data);
+}
+
+function showOpResult(data) {
+  clearOpResult();
+  document.getElementById('op-json').textContent = JSON.stringify(data, null, 2);
+  const card = document.getElementById('op-result');
+  const verdict = document.getElementById('op-verdict');
+  if (!data.geometry) {
+    card.className = 'result-card show miss';
+    verdict.textContent = 'Результат пустой';
+    return;
+  }
+
+  opResult = data;
+  opResultLayer = L.geoJSON(data.geometry, {
+    style: { color: '#111827', weight: 3, dashArray: '6 4', fillColor: '#111827', fillOpacity: 0.3 },
+    coordsToLatLng: c => L.latLng(c[1], c[0]),
+    interactive: false,
+  }).addTo(map);
+
+  const parts = data.geometry.type === 'MultiPolygon' ? data.geometry.coordinates.length : 1;
+  card.className = 'result-card show hit';
+  verdict.textContent = parts > 1
+    ? `${OP_LABELS[data.operation]}: ${data.geometry.type}, частей: ${parts}`
+    : `${OP_LABELS[data.operation]}: ${data.geometry.type}`;
+  document.getElementById('op-save').style.display = '';
+}
+
+async function saveOpResult() {
+  if (!opResult) return;
+  const names = opResult.polygon_ids.map(id => (polyById[id] ? polyById[id].name : id.slice(0, 6)));
+  const r = await apiFetch('/polygons', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: `${OP_LABELS[opResult.operation]}: ${names.join(', ')}`,
+      geometry: opResult.geometry,
+    }),
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    showToast(data.error || 'Не удалось сохранить');
+    return;
+  }
+  clearOpSelection();
+  addPolygonLayer(data);
+  refreshList();
+  refreshStats();
+}
+
+onOpTypeChange();
 
 map.whenReady(() => {
   requestAnimationFrame(() => {
